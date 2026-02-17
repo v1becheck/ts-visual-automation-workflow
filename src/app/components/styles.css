@@ -1,0 +1,45 @@
+.overview * {
+    box-sizing: border-box;
+}
+
+.automation-builder {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    height: 100%;
+}
+
+.automation-builder .reactflow-wrapper {
+    flex-grow: 1;
+    height: 100%;
+}
+
+.automation-builder aside.sidebar {
+    background: #fcfcfc;
+    border-left: 1px solid #000000;
+    padding: 10px;
+}
+
+.automation-builder aside .description {
+    margin-bottom: 10px;
+}
+
+.automation-builder .dndnode {
+    height: 20px;
+    padding: 4px;
+    border: 1px solid #1a192b;
+    border-radius: 2px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+}
+
+.automation-builder .dndnode.input {
+    background-color: chartreuse;
+}
+
+.automation-builder .dndnode.output {
+    background-color: aqua;
+}
