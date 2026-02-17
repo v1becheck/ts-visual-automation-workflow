@@ -1,155 +1,71 @@
-# Senior Full-Stack Developer - Technical Challenge
+# Visual Automation Workflow Builder
 
-## 🎯 Overview
+> A node-based automation flow builder (inspired by tools like n8n). Built for the Senior Full-Stack Developer technical challenge.
 
-This challenge involves building a **visual automation workflow builder** where users can create automation flows by connecting nodes (actions) together using a drag-and-drop interface.
+## Overview
 
-Think of it as a simplified version of tools like n8n, where each node represents an action and edges define the flow between actions.
+<!-- Briefly describe what the app does and the main features implemented. -->
 
-## 🚀 Tech Stack
+## Tech Stack
 
-This starter project includes:
+<!-- List core technologies: Next.js, ReactFlow, database choice, etc. Add any libraries you introduced and why. -->
 
-- **[Next.js](https://nextjs.org/docs)** - React framework with App Router
-- **[ReactFlow](https://reactflow.dev/learn)** - Visual node-based editor
-- **[TypeScript](https://www.typescriptlang.org/)** - Type safety
-- **CSS** - Styling (keep it simple, or use your preferred solution)
-- **[Jest](https://jestjs.io/)** - Testing framework
-
-**Feel free to add any libraries you need** - just document your reasoning for the choices you make.
-
-## 📋 Challenge Requirements
-
-### Frontend Tasks
-
-#### 1. Node Creation & Editing
-- [ ] Create a modal that allows users to edit node properties (at minimum: node name/label)
-- [ ] The modal should open when:
-  - A new node is dropped onto the canvas
-  - An existing node is clicked/double-clicked
-- [ ] Ensure the changes persist in the workflow state
-
-#### 2. UI/UX Enhancement
-- [ ] Improve the overall visual design and user experience
-- [ ] Consider: color scheme, spacing, typography, node styling, controls placement
-- [ ] Make it intuitive and pleasant to use
-
-### Backend Tasks
-
-#### 3. Data Persistence
-- [ ] Choose and set up a database (PostgreSQL or MongoDB recommended)
-- [ ] Design a schema for storing automation workflows
-- [ ] Consider what data needs to be persisted: workflows, nodes, edges, metadata
-
-#### 4. CRUD API
-- [ ] Implement API endpoints for automation workflows:
-  - `POST /api/automations` - Create new workflow
-  - `GET /api/automations/:id` - Retrieve workflow
-  - `PUT /api/automations/:id` - Update workflow
-  - `DELETE /api/automations/:id` - Delete workflow
-
-### Bonus: Be Creative! 🎨
-
-Add features that showcase your skills and thinking:
-- Different node types (email, webhook, delay, condition, etc.)
-- Workflow validation (detect cycles, orphaned nodes)
-- Undo/redo functionality
-- Workflow templates or examples
-- Export/import workflows
-- Dark mode
-- Keyboard shortcuts
-- Or anything else you think would be valuable!
-
-## ⚙️ Getting Started
+## Getting Started
 
 ### Prerequisites
-- Node.js 22 (use `nvm use` to switch to the correct version)
-- Database (PostgreSQL/MongoDB) - you can use Docker or a cloud service
 
-### Installation
+- Node.js 22 (use `nvm use`)
+- <!-- Database: PostgreSQL / MongoDB + any other requirements -->
+
+### Installation & Setup
 
 ```bash
 nvm use
 npm i
+# Database setup: <!-- e.g. Docker, migrations, or connection steps -->
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the application.
+Open [http://localhost:3000](http://localhost:3000).
 
-## 📝 What We're Looking For
+### Environment
 
-**We're not expecting perfection!** This is about understanding your approach to software development and how you communicate in an asynchronous environment.
+Copy `.env.example` to `.env` and fill in the values. Required variables:
 
-### Code Quality
-- **Clean, readable code** with consistent style
-- **Proper separation of concerns** (components, services, utilities)
-- **Type safety** - leverage TypeScript effectively
-- **Error handling** - both client and server-side
-- **Sensible abstractions** - neither over-engineered nor overly simplistic
+<!-- e.g. DATABASE_URL, NEXT_PUBLIC_*, etc. -->
 
-### Testing
-- **Strategic testing** - focus on critical paths
-- Unit tests for business logic
-- Integration tests for API endpoints (optional but appreciated)
-- If you don't have time for tests, **document your testing strategy**:
-  - What would you test?
-  - What testing approach would you take?
-  - Where are the critical test areas?
+## Architecture & Design
 
-### Documentation
-- **Code comments** where the intent isn't obvious
-- **README updates** if you add new setup steps
-- **Architecture decisions** - explain your database schema, API design choices
-- **Trade-offs** - what would you do differently with more time?
+### Database
 
-### UI/UX
-- **Functional and intuitive** interface
-- **Responsive** to different screen sizes (at least desktop)
-- **Visual polish** - doesn't need to be fancy, but should be thoughtful
+<!-- Schema overview: workflows, nodes, edges, metadata. Why this structure? -->
 
-## 📤 Submission Guidelines
+### API
 
-### Time Expectations
-Spend **4-8 hours** on this challenge. We respect your time - if something isn't finished, that's completely fine! Just document what you would have done.
+<!-- Endpoints and design choices: POST/GET/PUT/DELETE /api/automations, request/response shapes, error handling. -->
 
-### What to Submit
+### Frontend
 
-1. **Code**: Push your solution to a Git repository (GitHub, GitLab, etc.)
-2. **Documentation**: Update this README with:
-   - Setup instructions (especially for database)
-   - Architecture decisions and trade-offs
-   - What you'd improve with more time
-   - Testing strategy (if tests aren't included)
-3. **Database**: Include schema/migrations or a setup script (if needed)
-4. **Environment**: Provide `.env.example` file with required variables (if needed)
+<!-- Key components, state management, how node editing and persistence work. -->
 
-### How to Submit
+### Trade-offs
 
-1. **Create a private repository** with the shared code as your initial commit
-2. **Commit your changes** as you would in a professional environment (meaningful commit messages, logical grouping, etc.)
-3. **Share the repository** with `adrien.fischer@otera.ai`
+<!-- Decisions you made and what you’d do differently with more time or scale. -->
 
-### Evaluation Criteria
+## Testing
 
-We'll assess your submission based on:
+<!-- If you added tests: where they live, how to run them (`npm test`), what’s covered. -->
 
-- Code Quality
-- Functionality
-- Full-Stack Skills
-- Communication
-- Testing
+<!-- If not: testing strategy — what you would test, which areas are critical, and how you’d approach it. -->
 
-## 💡 Tips & Hints
+## What I’d Improve With More Time
 
-- **Start simple** - get the core functionality working first, then enhance
-- **Document as you go** - note your decisions and trade-offs
-- **Don't over-engineer** - we value pragmatic solutions
-- **Use AI tools** if you want - just be ready to discuss your choices
-- **Ask questions** if requirements are unclear (in real work, you would!)
+<!-- Prioritised list: performance, UX, tests, validation, extra features, etc. -->
 
-## 🤔 Questions?
+## Challenge Requirements (Reference)
 
-If you have questions about the requirements or run into issues with the starter code, please reach out. We want you to succeed!
+- **Frontend:** Node creation & editing modal; UI/UX improvements.
+- **Backend:** Database + schema; CRUD API for workflows (`POST/GET/PUT/DELETE /api/automations`).
+- **Bonus:** Extra node types, validation, undo/redo, templates, export/import, dark mode, shortcuts — as implemented.
 
-> **Have fun building!** We're excited to see your approach and creativity. 🚀
-
+See `README_CHALLENGE.md` for the full challenge brief.
