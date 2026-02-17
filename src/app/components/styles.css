@@ -1,45 +1,220 @@
 .overview * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
+/* ---- Layout ---- */
 .automation-builder {
-    display: flex;
-    flex-direction: row;
-    flex-grow: 1;
-    height: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  height: 100%;
+  background: var(--slate-950, #020617);
 }
 
 .automation-builder .reactflow-wrapper {
-    flex-grow: 1;
-    height: 100%;
+  flex-grow: 1;
+  height: 100%;
 }
 
+/* ---- Sidebar (portfolio card style) ---- */
 .automation-builder aside.sidebar {
-    background: #fcfcfc;
-    border-left: 1px solid #000000;
-    padding: 10px;
+  width: 14rem;
+  flex-shrink: 0;
+  background: rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(8px);
+  border-left: 1px solid var(--border-default);
+  padding: 1rem;
 }
 
 .automation-builder aside .description {
-    margin-bottom: 10px;
+  margin-bottom: 0.75rem;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--slate-400);
 }
 
+/* Draggable nodes – portfolio card + hover */
 .automation-builder .dndnode {
-    height: 20px;
-    padding: 4px;
-    border: 1px solid #1a192b;
-    border-radius: 2px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: grab;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-default);
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--slate-200);
+  background: rgba(15, 23, 42, 0.3);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.automation-builder .dndnode:active {
+  cursor: grabbing;
+}
+
+.automation-builder .dndnode:hover {
+  border-color: var(--border-hover);
+  background: rgba(56, 189, 248, 0.05);
+  transform: scale(1.02);
 }
 
 .automation-builder .dndnode.input {
-    background-color: chartreuse;
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--sky-300);
 }
 
 .automation-builder .dndnode.output {
-    background-color: aqua;
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--emerald-400);
+}
+
+/* ---- Email node (canvas card) ---- */
+.email-node {
+  padding: 0.75rem 1rem;
+  min-width: 8.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-default);
+  background: rgba(2, 6, 23, 0.4);
+  backdrop-filter: blur(4px);
+  color: var(--slate-200);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.email-node:hover {
+  border-color: var(--border-hover);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.email-node.selected {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: var(--shadow-glow);
+}
+
+.email-node strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* ---- ReactFlow canvas (portfolio dark theme) ---- */
+.overview.react-flow {
+  --xy-background-color: var(--slate-950);
+  --xy-background-pattern-dots-color: rgba(51, 65, 85, 0.5);
+  --xy-background-pattern-lines-color: rgba(51, 65, 85, 0.4);
+  --xy-background-pattern-cross-color: rgba(51, 65, 85, 0.4);
+  --xy-edge-stroke-default: rgba(148, 163, 184, 0.5);
+  --xy-edge-stroke-width-default: 2;
+  --xy-edge-stroke-selected-default: rgba(56, 189, 248, 0.9);
+  --xy-connectionline-stroke-default: rgba(56, 189, 248, 0.6);
+  --xy-connectionline-stroke-width-default: 2;
+  --xy-selection-background-color: rgba(56, 189, 248, 0.08);
+  --xy-selection-border: 1px dashed rgba(56, 189, 248, 0.6);
+  --xy-controls-button-background-color: var(--slate-900);
+  --xy-controls-button-background-color-hover: var(--slate-800);
+  --xy-controls-button-color: var(--slate-200);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--slate-700);
+  --xy-controls-box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.1);
+  --xy-minimap-background-color: var(--slate-900);
+  --xy-minimap-mask-background-color: rgba(15, 23, 42, 0.7);
+  --xy-minimap-node-background-color: var(--slate-700);
+  --xy-minimap-node-stroke-color: var(--slate-600);
+  --xy-handle-background-color: var(--slate-500);
+  --xy-handle-border-color: var(--slate-300);
+  --xy-node-background-color: rgba(2, 6, 23, 0.4);
+  --xy-node-border: 1px solid var(--border-default);
+  --xy-node-color: var(--slate-200);
+  --xy-node-border-radius: 1rem;
+  --xy-node-boxshadow-hover: 0 0 0 1px rgba(56, 189, 248, 0.3);
+  --xy-node-boxshadow-selected: var(--shadow-glow);
+  --xy-node-border-selected: 1px solid rgba(56, 189, 248, 0.5);
+  background-color: var(--slate-950);
+}
+
+.overview .react-flow__background {
+  background-color: var(--slate-950);
+}
+
+.overview .react-flow__pane {
+  cursor: grab;
+}
+
+.overview .react-flow__pane.dragging {
+  cursor: grabbing;
+}
+
+.overview .react-flow__selection,
+.overview .react-flow__nodesselection-rect {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px dashed rgba(56, 189, 248, 0.6);
+}
+
+.overview .react-flow__edge-path {
+  stroke: rgba(148, 163, 184, 0.5);
+  stroke-width: 2;
+}
+
+.overview .react-flow__edge.selected .react-flow__edge-path,
+.overview .react-flow__edge:hover .react-flow__edge-path {
+  stroke: rgba(56, 189, 248, 0.8);
+}
+
+.overview .react-flow__controls button {
+  background: var(--slate-900) !important;
+  color: var(--slate-200) !important;
+  border-color: var(--slate-700) !important;
+}
+
+.overview .react-flow__controls button:hover {
+  background: var(--slate-800) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border-hover) !important;
+}
+
+.overview .react-flow__minimap {
+  background: var(--slate-900) !important;
+  border-radius: 0.5rem;
+  border: 1px solid var(--slate-700);
+}
+
+.overview .react-flow__attribution {
+  background: transparent !important;
+}
+
+.overview .react-flow__attribution a {
+  color: var(--slate-400);
+}
+
+/* Default ReactFlow nodes (input/default/output) – dark card style */
+.overview .react-flow__node-input,
+.overview .react-flow__node-default,
+.overview .react-flow__node-output {
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-default);
+  background: rgba(2, 6, 23, 0.4) !important;
+  color: var(--slate-200);
+  backdrop-filter: blur(4px);
+}
+
+.overview .react-flow__node-input.selectable:hover,
+.overview .react-flow__node-default.selectable:hover,
+.overview .react-flow__node-output.selectable:hover {
+  border-color: var(--border-hover);
+  background: rgba(56, 189, 248, 0.05) !important;
+}
+
+.overview .react-flow__node-input.selectable.selected,
+.overview .react-flow__node-input.selectable:focus,
+.overview .react-flow__node-default.selectable.selected,
+.overview .react-flow__node-default.selectable:focus,
+.overview .react-flow__node-output.selectable.selected,
+.overview .react-flow__node-output.selectable:focus {
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: var(--shadow-glow);
 }
