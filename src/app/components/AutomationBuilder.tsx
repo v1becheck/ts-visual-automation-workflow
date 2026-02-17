@@ -5,7 +5,6 @@ import {
   addEdge,
   Background,
   Controls,
-  MiniMap,
   Node,
   Edge,
   NodeTypes,
@@ -32,6 +31,7 @@ import SetNode from "./nodes/SetNode";
 import MergeNode from "./nodes/MergeNode";
 import SlackNode from "./nodes/SlackNode";
 import CodeNode from "./nodes/CodeNode";
+import CustomMinimapWithEdges from "./CustomMinimapWithEdges";
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -182,7 +182,7 @@ const AutomationBuilder = () => {
           onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
         >
-          <MiniMap zoomable pannable />
+          <CustomMinimapWithEdges />
           <Controls />
           <Background />
         </ReactFlow>

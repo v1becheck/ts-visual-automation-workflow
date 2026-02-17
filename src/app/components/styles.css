@@ -635,10 +635,34 @@
   border-color: var(--border-hover) !important;
 }
 
-.overview .react-flow__minimap {
+.overview .react-flow__minimap,
+.overview .automation-minimap {
   background: var(--slate-900) !important;
-  border-radius: 0.5rem;
-  border: 1px solid var(--slate-700);
+  border-radius: 0.75rem;
+  border: 1px solid var(--slate-600);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.overview .react-flow__minimap svg,
+.overview .automation-minimap svg {
+  border-radius: 0.75rem;
+}
+
+/* Minimap viewport mask: subtle so colored nodes stay visible */
+/* Custom minimap: connectors (edges) */
+.overview .react-flow__minimap-edges {
+  stroke: var(--slate-500);
+}
+.overview .react-flow__minimap-edges path {
+  stroke-width: 1;
+}
+
+/* Minimap viewport mask: subtle so colored nodes stay visible */
+.overview .react-flow__minimap-mask {
+  fill: rgba(15, 23, 42, 0.75) !important;
+  stroke: var(--slate-600);
+  stroke-width: 1.5;
 }
 
 .overview .react-flow__attribution {
