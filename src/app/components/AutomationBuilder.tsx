@@ -23,13 +23,30 @@ import { useDnD } from "../contexts/DnDContext";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 import EmailNode from "./nodes/EmailNode";
+import WebhookNode from "./nodes/WebhookNode";
+import DelayNode from "./nodes/DelayNode";
+import ConditionNode from "./nodes/ConditionNode";
+import HttpNode from "./nodes/HttpNode";
+import ScheduleNode from "./nodes/ScheduleNode";
+import SetNode from "./nodes/SetNode";
+import MergeNode from "./nodes/MergeNode";
+import SlackNode from "./nodes/SlackNode";
+import CodeNode from "./nodes/CodeNode";
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
-// list of possible node types
 const nodeTypes: NodeTypes = {
   email: EmailNode,
+  webhook: WebhookNode,
+  delay: DelayNode,
+  condition: ConditionNode,
+  http: HttpNode,
+  schedule: ScheduleNode,
+  set: SetNode,
+  merge: MergeNode,
+  slack: SlackNode,
+  code: CodeNode,
 };
 
 /** All nodes have at least data.label for the edit modal */
@@ -37,10 +54,25 @@ function getNodeLabel(node: Node): string {
   return (node.data as { label?: string })?.label ?? "Unnamed node";
 }
 
+const NODE_TYPE_VALUES: NodeTypeOption[] = [
+  "input",
+  "default",
+  "output",
+  "email",
+  "webhook",
+  "delay",
+  "condition",
+  "http",
+  "schedule",
+  "set",
+  "merge",
+  "slack",
+  "code",
+];
+
 function getNodeType(node: Node): NodeTypeOption {
   const t = node.type as string | undefined;
-  if (t === "input" || t === "default" || t === "output" || t === "email")
-    return t;
+  if (t && NODE_TYPE_VALUES.includes(t as NodeTypeOption)) return t as NodeTypeOption;
   return "default";
 }
 

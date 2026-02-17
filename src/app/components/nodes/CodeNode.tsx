@@ -1,19 +1,19 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { memo } from "react";
 
-type EmailNode = Node<{ label: string }, "string">;
+type CodeNodeType = Node<{ label: string }, "code">;
 
-const EmailNode = ({ data, selected }: NodeProps<EmailNode>) => {
+const CodeNode = ({ data, selected }: NodeProps<CodeNodeType>) => {
   return (
-    <div className={`email-node${selected ? " selected" : ""}`}>
+    <div className={`code-node${selected ? " selected" : ""}`}>
       <Handle type="target" position={Position.Left} />
       <div>
         <strong>{data.label}</strong>
       </div>
-      <div className="node-subtitle">Email</div>
+      <div className="node-subtitle">Code</div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
 };
 
-export default memo(EmailNode);
+export default memo(CodeNode);

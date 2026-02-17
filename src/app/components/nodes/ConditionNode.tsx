@@ -1,19 +1,19 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { memo } from "react";
 
-type EmailNode = Node<{ label: string }, "string">;
+type ConditionNodeType = Node<{ label: string }, "condition">;
 
-const EmailNode = ({ data, selected }: NodeProps<EmailNode>) => {
+const ConditionNode = ({ data, selected }: NodeProps<ConditionNodeType>) => {
   return (
-    <div className={`email-node${selected ? " selected" : ""}`}>
+    <div className={`condition-node${selected ? " selected" : ""}`}>
       <Handle type="target" position={Position.Left} />
       <div>
         <strong>{data.label}</strong>
       </div>
-      <div className="node-subtitle">Email</div>
+      <div className="node-subtitle">Condition</div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
 };
 
-export default memo(EmailNode);
+export default memo(ConditionNode);

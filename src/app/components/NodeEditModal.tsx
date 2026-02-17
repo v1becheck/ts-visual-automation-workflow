@@ -2,13 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export type NodeTypeOption = "input" | "default" | "output" | "email";
+export type NodeTypeOption =
+  | "input"
+  | "default"
+  | "output"
+  | "email"
+  | "webhook"
+  | "delay"
+  | "condition"
+  | "http"
+  | "schedule"
+  | "set"
+  | "merge"
+  | "slack"
+  | "code";
 
 export const NODE_TYPE_OPTIONS: { value: NodeTypeOption; label: string }[] = [
   { value: "input", label: "Input" },
   { value: "default", label: "Default" },
   { value: "output", label: "Output" },
   { value: "email", label: "Email" },
+  { value: "webhook", label: "Webhook" },
+  { value: "delay", label: "Delay" },
+  { value: "condition", label: "Condition" },
+  { value: "http", label: "HTTP Request" },
+  { value: "schedule", label: "Schedule" },
+  { value: "set", label: "Set" },
+  { value: "merge", label: "Merge" },
+  { value: "slack", label: "Slack" },
+  { value: "code", label: "Code" },
 ];
 
 export type NodeEditModalProps = {

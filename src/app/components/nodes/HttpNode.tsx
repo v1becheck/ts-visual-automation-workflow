@@ -1,19 +1,19 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { memo } from "react";
 
-type EmailNode = Node<{ label: string }, "string">;
+type HttpNodeType = Node<{ label: string }, "http">;
 
-const EmailNode = ({ data, selected }: NodeProps<EmailNode>) => {
+const HttpNode = ({ data, selected }: NodeProps<HttpNodeType>) => {
   return (
-    <div className={`email-node${selected ? " selected" : ""}`}>
+    <div className={`http-node${selected ? " selected" : ""}`}>
       <Handle type="target" position={Position.Left} />
       <div>
         <strong>{data.label}</strong>
       </div>
-      <div className="node-subtitle">Email</div>
+      <div className="node-subtitle">HTTP Request</div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
 };
 
-export default memo(EmailNode);
+export default memo(HttpNode);

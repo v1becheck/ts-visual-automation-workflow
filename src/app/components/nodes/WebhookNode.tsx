@@ -1,19 +1,19 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { memo } from "react";
 
-type EmailNode = Node<{ label: string }, "string">;
+type WebhookNodeType = Node<{ label: string }, "webhook">;
 
-const EmailNode = ({ data, selected }: NodeProps<EmailNode>) => {
+const WebhookNode = ({ data, selected }: NodeProps<WebhookNodeType>) => {
   return (
-    <div className={`email-node${selected ? " selected" : ""}`}>
+    <div className={`webhook-node${selected ? " selected" : ""}`}>
       <Handle type="target" position={Position.Left} />
       <div>
         <strong>{data.label}</strong>
       </div>
-      <div className="node-subtitle">Email</div>
+      <div className="node-subtitle">Webhook</div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
 };
 
-export default memo(EmailNode);
+export default memo(WebhookNode);

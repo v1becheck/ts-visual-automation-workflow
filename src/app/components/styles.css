@@ -145,7 +145,43 @@
 }
 
 .node-edit-modal-type-option--email .node-edit-modal-type-swatch {
-  background: var(--slate-400);
+  background: var(--sky-400);
+}
+
+.node-edit-modal-type-option--webhook .node-edit-modal-type-swatch {
+  background: var(--teal-500);
+}
+
+.node-edit-modal-type-option--delay .node-edit-modal-type-swatch {
+  background: var(--amber-500);
+}
+
+.node-edit-modal-type-option--condition .node-edit-modal-type-swatch {
+  background: var(--violet-500);
+}
+
+.node-edit-modal-type-option--http .node-edit-modal-type-swatch {
+  background: var(--indigo-500);
+}
+
+.node-edit-modal-type-option--schedule .node-edit-modal-type-swatch {
+  background: var(--emerald-500);
+}
+
+.node-edit-modal-type-option--set .node-edit-modal-type-swatch {
+  background: var(--orange-500);
+}
+
+.node-edit-modal-type-option--merge .node-edit-modal-type-swatch {
+  background: var(--fuchsia-500);
+}
+
+.node-edit-modal-type-option--slack .node-edit-modal-type-swatch {
+  background: var(--rose-500);
+}
+
+.node-edit-modal-type-option--code .node-edit-modal-type-swatch {
+  background: var(--slate-500);
 }
 
 .node-edit-modal-type-label {
@@ -264,6 +300,66 @@
   color: var(--emerald-400);
 }
 
+.automation-builder .dndnode.email {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--sky-300);
+}
+
+.automation-builder .dndnode.webhook {
+  border-color: rgba(20, 184, 166, 0.4);
+  background: rgba(20, 184, 166, 0.1);
+  color: var(--teal-400);
+}
+
+.automation-builder .dndnode.delay {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--amber-400);
+}
+
+.automation-builder .dndnode.condition {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--violet-400);
+}
+
+.automation-builder .dndnode.http {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--indigo-400);
+}
+
+.automation-builder .dndnode.schedule {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--emerald-400);
+}
+
+.automation-builder .dndnode.set {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--orange-400);
+}
+
+.automation-builder .dndnode.merge {
+  border-color: rgba(217, 70, 239, 0.4);
+  background: rgba(217, 70, 239, 0.1);
+  color: var(--fuchsia-400);
+}
+
+.automation-builder .dndnode.slack {
+  border-color: rgba(244, 63, 94, 0.4);
+  background: rgba(244, 63, 94, 0.1);
+  color: var(--rose-400);
+}
+
+.automation-builder .dndnode.code {
+  border-color: rgba(100, 116, 139, 0.5);
+  background: rgba(51, 65, 85, 0.3);
+  color: var(--slate-300);
+}
+
 /* ---- Canvas nodes: n8n-style type color (thick left accent bar) ---- */
 .email-node {
   padding: 0.75rem 1rem 0.75rem 1rem;
@@ -291,6 +387,175 @@
 }
 
 .email-node strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.node-subtitle {
+  font-size: 0.6875rem;
+  color: var(--slate-400);
+  margin-top: 0.25rem;
+}
+
+/* Custom node types: shared base + n8n-style left accent */
+.webhook-node,
+.delay-node,
+.condition-node,
+.http-node {
+  padding: 0.75rem 1rem;
+  min-width: 8.75rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  border: 1px solid var(--border-default);
+  background: rgba(2, 6, 23, 0.4);
+  backdrop-filter: blur(4px);
+  color: var(--slate-200);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.webhook-node {
+  border-left: 4px solid var(--teal-500);
+}
+
+.webhook-node:hover {
+  border-left-color: var(--teal-400);
+}
+
+.webhook-node.selected {
+  border-left-color: var(--teal-400);
+}
+
+.delay-node {
+  border-left: 4px solid var(--amber-500);
+}
+
+.delay-node:hover {
+  border-left-color: var(--amber-400);
+}
+
+.delay-node.selected {
+  border-left-color: var(--amber-400);
+}
+
+.condition-node {
+  border-left: 4px solid var(--violet-500);
+}
+
+.condition-node:hover {
+  border-left-color: var(--violet-400);
+}
+
+.condition-node.selected {
+  border-left-color: var(--violet-400);
+}
+
+.http-node {
+  border-left: 4px solid var(--indigo-500);
+}
+
+.http-node:hover {
+  border-left-color: var(--indigo-400);
+}
+
+.http-node.selected {
+  border-left-color: var(--indigo-400);
+}
+
+.schedule-node,
+.set-node,
+.merge-node,
+.slack-node,
+.code-node {
+  padding: 0.75rem 1rem;
+  min-width: 8.75rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  border: 1px solid var(--border-default);
+  background: rgba(2, 6, 23, 0.4);
+  backdrop-filter: blur(4px);
+  color: var(--slate-200);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.schedule-node {
+  border-left: 4px solid var(--emerald-500);
+}
+
+.schedule-node:hover,
+.schedule-node.selected {
+  border-left-color: var(--emerald-400);
+}
+
+.set-node {
+  border-left: 4px solid var(--orange-500);
+}
+
+.set-node:hover,
+.set-node.selected {
+  border-left-color: var(--orange-400);
+}
+
+.merge-node {
+  border-left: 4px solid var(--fuchsia-500);
+}
+
+.merge-node:hover,
+.merge-node.selected {
+  border-left-color: var(--fuchsia-400);
+}
+
+.slack-node {
+  border-left: 4px solid var(--rose-500);
+}
+
+.slack-node:hover,
+.slack-node.selected {
+  border-left-color: var(--rose-400);
+}
+
+.code-node {
+  border-left: 4px solid var(--slate-500);
+}
+
+.code-node:hover,
+.code-node.selected {
+  border-left-color: var(--slate-400);
+}
+
+.webhook-node:hover,
+.delay-node:hover,
+.condition-node:hover,
+.http-node:hover,
+.schedule-node:hover,
+.set-node:hover,
+.merge-node:hover,
+.slack-node:hover,
+.code-node:hover {
+  border-color: var(--border-hover);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.webhook-node.selected,
+.delay-node.selected,
+.condition-node.selected,
+.http-node.selected,
+.schedule-node.selected,
+.set-node.selected,
+.merge-node.selected,
+.slack-node.selected,
+.code-node.selected {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: var(--shadow-glow);
+}
+
+.webhook-node strong,
+.delay-node strong,
+.condition-node strong,
+.http-node strong,
+.schedule-node strong,
+.set-node strong,
+.merge-node strong,
+.slack-node strong,
+.code-node strong {
   font-size: 0.875rem;
   font-weight: 600;
 }

@@ -1,19 +1,19 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { memo } from "react";
 
-type EmailNode = Node<{ label: string }, "string">;
+type DelayNodeType = Node<{ label: string }, "delay">;
 
-const EmailNode = ({ data, selected }: NodeProps<EmailNode>) => {
+const DelayNode = ({ data, selected }: NodeProps<DelayNodeType>) => {
   return (
-    <div className={`email-node${selected ? " selected" : ""}`}>
+    <div className={`delay-node${selected ? " selected" : ""}`}>
       <Handle type="target" position={Position.Left} />
       <div>
         <strong>{data.label}</strong>
       </div>
-      <div className="node-subtitle">Email</div>
+      <div className="node-subtitle">Delay</div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
 };
 
-export default memo(EmailNode);
+export default memo(DelayNode);
