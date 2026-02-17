@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   addEdge,
   Background,
@@ -17,6 +17,7 @@ import {
 } from "@xyflow/react";
 
 import Sidebar from "./Sidebar";
+import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
 import { useDnD } from "../contexts/DnDContext";
 
 import "@xyflow/react/dist/style.css";
@@ -31,6 +32,18 @@ const nodeTypes: NodeTypes = {
   email: EmailNode,
 };
 
+/** All nodes have at least data.label for the edit modal */
+function getNodeLabel(node: Node): string {
+  return (node.data as { label?: string })?.label ?? "Unnamed node";
+}
+
+function getNodeType(node: Node): NodeTypeOption {
+  const t = node.type as string | undefined;
+  if (t === "input" || t === "default" || t === "output" || t === "email")
+    return t;
+  return "default";
+}
+
 const AutomationBuilder = () => {
   const reactFlowWrapper = useRef(null);
 
@@ -39,6 +52,10 @@ const AutomationBuilder = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editingNodeLabel, setEditingNodeLabel] = useState("");
+  const [editingNodeType, setEditingNodeType] = useState<NodeTypeOption>("default");
 
   // we load the data from the server on mount
   useEffect(() => {
@@ -66,26 +83,56 @@ const AutomationBuilder = () => {
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      // check if the dropped element is valid
-      if (!type) {
-        return;
-      }
+      if (!type) return;
 
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
-      const newNode = {
-        id: getId(),
+      const newId = getId();
+      const defaultLabel = `${type} node`;
+      const newNode: Node = {
+        id: newId,
         type,
         position,
-        data: { label: `${type} node` },
+        data: { label: defaultLabel },
       };
 
       setNodes((nds) => [...nds, newNode]);
+      setEditingNodeLabel(defaultLabel);
+      setEditingNodeType(getNodeType(newNode));
+      setEditingNodeId(newId);
     },
     [screenToFlowPosition, type, setNodes]
   );
+
+  const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setEditingNodeId(node.id);
+    setEditingNodeLabel(getNodeLabel(node));
+    setEditingNodeType(getNodeType(node));
+  }, []);
+
+  const handleSaveNodeEdit = useCallback(
+    (nodeId: string, label: string, nodeType: NodeTypeOption) => {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                type: nodeType,
+                data: { ...n.data, label } as { label: string },
+              }
+            : n
+        )
+      );
+      setEditingNodeId(null);
+    },
+    [setNodes]
+  );
+
+  const handleCloseNodeEdit = useCallback(() => {
+    setEditingNodeId(null);
+  }, []);
 
   return (
     <div className="automation-builder">
@@ -100,6 +147,7 @@ const AutomationBuilder = () => {
           className="overview"
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
         >
           <MiniMap zoomable pannable />
@@ -108,6 +156,15 @@ const AutomationBuilder = () => {
         </ReactFlow>
       </div>
       <Sidebar />
+
+      <NodeEditModal
+        isOpen={editingNodeId !== null}
+        nodeId={editingNodeId}
+        initialLabel={editingNodeLabel}
+        initialType={editingNodeType}
+        onSave={handleSaveNodeEdit}
+        onClose={handleCloseNodeEdit}
+      />
     </div>
   );
 };
