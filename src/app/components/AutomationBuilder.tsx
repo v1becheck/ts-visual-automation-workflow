@@ -20,6 +20,7 @@ import Sidebar from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
 import ValidationPanel from "./ValidationPanel";
 import UndoRedoPanel from "./UndoRedoPanel";
+import ExportImportPanel from "./ExportImportPanel";
 import { useDnD } from "../contexts/DnDContext";
 import { validateWorkflow } from "../lib/workflowValidation";
 import { useWorkflowHistory } from "../hooks/useWorkflowHistory";
@@ -136,6 +137,16 @@ const AutomationBuilder = () => {
       )
     );
   }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]);
+
+  const handleImport = useCallback(
+    (importedNodes: Node[], importedEdges: Edge[]) => {
+      pushStateBefore(nodes, edges);
+      markAction();
+      setNodes(importedNodes);
+      setEdges(importedEdges);
+    },
+    [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
+  );
 
   const deselectAll = useCallback(() => {
     setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
@@ -377,7 +388,17 @@ const AutomationBuilder = () => {
             </button>
             <ThemeToggle />
           </Panel>
-          <ValidationPanel result={validationResult} nodes={nodes} />
+          <Panel position="top-left" className="top-left-panel">
+            <div className="top-left-panel__column">
+              <ExportImportPanel
+                nodes={nodes}
+                edges={edges}
+                onImport={handleImport}
+                embedded
+              />
+              <ValidationPanel result={validationResult} nodes={nodes} embedded />
+            </div>
+          </Panel>
           <UndoRedoPanel undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} />
           <CustomMinimapWithEdges />
           <Controls />

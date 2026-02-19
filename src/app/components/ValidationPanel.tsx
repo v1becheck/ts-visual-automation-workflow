@@ -7,6 +7,8 @@ import type { Node } from "@xyflow/react";
 type Props = {
   result: ValidationResult;
   nodes: Node[];
+  /** When true, render only the content (no Panel). Use inside a shared Panel. */
+  embedded?: boolean;
 };
 
 function getNodeLabel(nodes: Node[], id: string): string {
@@ -15,12 +17,11 @@ function getNodeLabel(nodes: Node[], id: string): string {
   return label || id;
 }
 
-export default function ValidationPanel({ result, nodes }: Props) {
+export default function ValidationPanel({ result, nodes, embedded }: Props) {
   const hasIssues = !result.valid;
 
-  return (
-    <Panel position="top-left" className="validation-panel">
-      <div className={`validation-panel__content ${hasIssues ? "validation-panel__content--invalid" : ""}`}>
+  const content = (
+    <div className={`validation-panel__content ${hasIssues ? "validation-panel__content--invalid" : ""}`}>
         {result.valid ? (
           <p className="validation-panel__status validation-panel__status--valid">
             <span className="validation-panel__icon" aria-hidden>✓</span>
@@ -63,6 +64,15 @@ export default function ValidationPanel({ result, nodes }: Props) {
           </div>
         )}
       </div>
+  );
+
+  if (embedded) {
+    return <div className="validation-panel">{content}</div>;
+  }
+
+  return (
+    <Panel position="top-left" className="validation-panel">
+      {content}
     </Panel>
   );
 }
