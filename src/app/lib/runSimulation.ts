@@ -14,8 +14,22 @@ export type SimulationStep = {
 };
 
 export type SimulationResult =
-  | { success: true; steps: SimulationStep[]; order: string[] }
+  | { success: true; steps: SimulationStep[]; order: string[]; unreachableNodeIds: string[] }
   | { success: false; error: string };
+
+/**
+ * Dedupe edges by (source, target) and keep only edges whose endpoints exist in nodeIds.
+ */
+function normalizeEdges(edges: SimEdge[], nodeIds: Set<string>): SimEdge[] {
+  const seen = new Set<string>();
+  return edges.filter((e) => {
+    if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) return false;
+    const key = `${e.source}\t${e.target}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 /**
  * Build incoming edge count and outgoing adjacency for the graph.
@@ -43,12 +57,14 @@ export function runSimulation(
 ): SimulationResult {
   const nodeIds = new Set(nodes.map((n) => n.id));
   if (nodeIds.size === 0) {
-    return { success: true, steps: [], order: [] };
+    return { success: true, steps: [], order: [], unreachableNodeIds: [] };
   }
+
+  const edgesFiltered = normalizeEdges(edges, nodeIds);
 
   const validation = validateWorkflow(
     nodes.map((n) => ({ id: n.id })),
-    edges.map((e) => ({ source: e.source, target: e.target }))
+    edgesFiltered.map((e) => ({ source: e.source, target: e.target }))
   );
 
   if (validation.cycles.length > 0) {
@@ -58,7 +74,7 @@ export function runSimulation(
     };
   }
 
-  const { incomingCount, outgoing } = getMaps(edges);
+  const { incomingCount, outgoing } = getMaps(edgesFiltered);
 
   // Initialize: nodes not in any edge have 0 incoming
   for (const id of nodeIds) {
@@ -86,6 +102,7 @@ export function runSimulation(
 
     if (levelIds.length === 0) break;
 
+    levelIds.sort((a, b) => a.localeCompare(b));
     steps.push({ stepIndex, nodeIds: levelIds });
 
     const nextLevel = new Set<string>();
@@ -101,5 +118,7 @@ export function runSimulation(
     stepIndex++;
   }
 
-  return { success: true, steps, order };
+  const unreachableNodeIds = [...nodeIds].filter((id) => !completed.has(id)).sort((a, b) => a.localeCompare(b));
+
+  return { success: true, steps, order, unreachableNodeIds };
 }

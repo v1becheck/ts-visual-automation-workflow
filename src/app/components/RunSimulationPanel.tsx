@@ -51,12 +51,6 @@ export default function RunSimulationPanel({
     }
   }, [nodes, edges, onHighlightNodes]);
 
-  const handleHighlight = useCallback(() => {
-    if (result?.success && result.order.length > 0 && onHighlightNodes) {
-      onHighlightNodes(result.order);
-    }
-  }, [result, onHighlightNodes]);
-
   const content = (
     <div ref={panelRef} className="run-simulation-panel">
       <div className="run-simulation-panel__row">
@@ -94,14 +88,11 @@ export default function RunSimulationPanel({
                       </li>
                     ))}
                   </ol>
-                  {onHighlightNodes && result.order.length > 0 && (
-                    <button
-                      type="button"
-                      className="run-simulation-panel__highlight"
-                      onClick={handleHighlight}
-                    >
-                      Highlight on canvas
-                    </button>
+                  {result.unreachableNodeIds.length > 0 && (
+                    <p className="run-simulation-panel__unreachable">
+                      Not run (no path from triggers):{" "}
+                      {result.unreachableNodeIds.map((id) => getNodeLabel(nodes, id)).join(", ")}
+                    </p>
                   )}
                 </>
               )}
