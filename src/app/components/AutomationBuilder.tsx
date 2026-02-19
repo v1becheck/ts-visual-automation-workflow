@@ -113,6 +113,7 @@ const AutomationBuilder = () => {
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const initialLoadDoneRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SAVE_DEBOUNCE_MS = 1500;
@@ -249,6 +250,7 @@ const AutomationBuilder = () => {
       } catch (err) {
         console.error("Failed to load:", err);
       } finally {
+        setIsInitialLoading(false);
         setTimeout(() => {
           initialLoadDoneRef.current = true;
         }, 0);
@@ -533,6 +535,17 @@ const AutomationBuilder = () => {
         : n
     );
   }, [nodes, validationResult]);
+
+  if (isInitialLoading) {
+    return (
+      <div className="automation-builder automation-builder--loading">
+        <div className="app-loader" role="status" aria-live="polite" aria-label="Loading workflow">
+          <div className="app-loader__spinner" aria-hidden />
+          <p className="app-loader__text">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="automation-builder">
