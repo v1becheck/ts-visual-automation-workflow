@@ -23,6 +23,10 @@ import UndoRedoPanel from "./UndoRedoPanel";
 import { useDnD } from "../contexts/DnDContext";
 import { validateWorkflow } from "../lib/workflowValidation";
 import { useWorkflowHistory } from "../hooks/useWorkflowHistory";
+import {
+  instantiateTemplate,
+  type WorkflowTemplate,
+} from "../lib/workflowTemplates";
 
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -277,6 +281,17 @@ const AutomationBuilder = () => {
     setEditingNodeId(null);
   }, []);
 
+  const loadTemplate = useCallback(
+    (template: WorkflowTemplate) => {
+      pushStateBefore(nodes, edges);
+      markAction();
+      const { nodes: nextNodes, edges: nextEdges } = instantiateTemplate(template);
+      setNodes(nextNodes);
+      setEdges(nextEdges);
+    },
+    [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
+  );
+
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
       const hasRemove = changes.some((c) => (c as { type?: string }).type === "remove");
@@ -369,7 +384,7 @@ const AutomationBuilder = () => {
           <Background />
         </ReactFlow>
       </div>
-      <Sidebar />
+      <Sidebar onLoadTemplate={loadTemplate} />
 
       <NodeEditModal
         isOpen={editingNodeId !== null}
