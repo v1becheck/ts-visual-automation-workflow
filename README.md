@@ -97,6 +97,7 @@ Coverage includes at least the main page render. With more time: unit tests for 
 2. **Tests** – Broader unit tests (validation, export/import), API integration tests, and E2E for critical paths.
 3. **Rate limiting** – Protect the API from abuse when public.
 4. **Error feedback** – Toasts or inline messages for save/load failures instead of only console.
+5. **Workflow-runner service** - queue (BullMQ / SQS) and execution logs
 
 ## Challenge Requirements (Reference)
 
