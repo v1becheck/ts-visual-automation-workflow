@@ -119,7 +119,9 @@ const AutomationBuilder = () => {
   const initialLoadDoneRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipDirtyRef = useRef(false);
+  const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
   const SAVE_DEBOUNCE_MS = 1500;
+  const PASTE_OFFSET = 50;
 
   const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
     try {
@@ -344,6 +346,47 @@ const AutomationBuilder = () => {
     setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
   }, [setNodes, setEdges]);
 
+  const copySelected = useCallback(() => {
+    const selectedNodes = nodes.filter((n) => n.selected);
+    if (selectedNodes.length === 0) return;
+    const selectedIds = new Set(selectedNodes.map((n) => n.id));
+    const selectedEdges = edges.filter(
+      (e) => selectedIds.has(e.source) && selectedIds.has(e.target)
+    );
+    clipboardRef.current = {
+      nodes: selectedNodes.map((n) => ({ ...n })),
+      edges: selectedEdges.map((e) => ({ ...e })),
+    };
+  }, [nodes, edges]);
+
+  const pasteFromClipboard = useCallback(() => {
+    const clipboard = clipboardRef.current;
+    if (!clipboard || clipboard.nodes.length === 0) return;
+    const idMap = new Map<string, string>();
+    clipboard.nodes.forEach((n) => idMap.set(n.id, getId()));
+    const newNodes: Node[] = clipboard.nodes.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: {
+        x: n.position.x + PASTE_OFFSET,
+        y: n.position.y + PASTE_OFFSET,
+      },
+      selected: true,
+    }));
+    const newEdges: Edge[] = clipboard.edges
+      .filter((e) => idMap.has(e.source) && idMap.has(e.target))
+      .map((e, i) => ({
+        ...e,
+        id: `paste_e_${Date.now()}_${i}`,
+        source: idMap.get(e.source)!,
+        target: idMap.get(e.target)!,
+      }));
+    pushStateBefore(nodes, edges);
+    markAction();
+    setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...newNodes]);
+    setEdges((eds) => [...eds.map((e) => ({ ...e, selected: false })), ...newEdges]);
+  }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]);
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -393,6 +436,16 @@ const AutomationBuilder = () => {
         if (workflowId && !isSaving) handleManualSave();
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+        e.preventDefault();
+        copySelected();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        e.preventDefault();
+        pasteFromClipboard();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "/") {
         e.preventDefault();
         setShortcutsModalOpen((open) => !open);
@@ -407,6 +460,8 @@ const AutomationBuilder = () => {
     isSaving,
     handleManualSave,
     deleteSelected,
+    copySelected,
+    pasteFromClipboard,
     deselectAll,
     editingNodeId,
     nodes,
