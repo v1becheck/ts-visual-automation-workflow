@@ -38,6 +38,7 @@ import SlackNode from "./nodes/SlackNode";
 import CodeNode from "./nodes/CodeNode";
 import CustomMinimapWithEdges from "./CustomMinimapWithEdges";
 import ThemeToggle from "./ThemeToggle";
+import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -104,6 +105,7 @@ const AutomationBuilder = () => {
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingNodeLabel, setEditingNodeLabel] = useState("");
   const [editingNodeType, setEditingNodeType] = useState<NodeTypeOption>("default");
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
 
   // we load the data from the server on mount
   useEffect(() => {
@@ -116,21 +118,86 @@ const AutomationBuilder = () => {
     getData();
   }, [setNodes, setEdges]);
 
+  const deleteSelected = useCallback(() => {
+    const selectedNodeIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));
+    const hasSelectedNodes = selectedNodeIds.size > 0;
+    const hasSelectedEdges = edges.some((e) => e.selected);
+    if (!hasSelectedNodes && !hasSelectedEdges) return;
+    pushStateBefore(nodes, edges);
+    markAction();
+    setNodes((nds) => nds.filter((n) => !n.selected));
+    setEdges((eds) =>
+      eds.filter(
+        (e) => !e.selected && !selectedNodeIds.has(e.source) && !selectedNodeIds.has(e.target)
+      )
+    );
+  }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]);
+
+  const deselectAll = useCallback(() => {
+    setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+    setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
+  }, [setNodes, setEdges]);
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const inInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+      if (inInput) return;
+
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
+        return;
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "y") {
         e.preventDefault();
         redo();
+        return;
+      }
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        deleteSelected();
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (editingNodeId !== null) {
+          setEditingNodeId(null);
+        } else {
+          deselectAll();
+        }
+        return;
+      }
+      if (e.key === "Enter" && editingNodeId === null) {
+        const selected = nodes.filter((n) => n.selected);
+        if (selected.length === 1) {
+          e.preventDefault();
+          const node = selected[0];
+          setEditingNodeId(node.id);
+          setEditingNodeLabel(getNodeLabel(node));
+          setEditingNodeType(getNodeType(node));
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "/") {
+        e.preventDefault();
+        setShortcutsModalOpen((open) => !open);
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo]);
+  }, [
+    undo,
+    redo,
+    deleteSelected,
+    deselectAll,
+    editingNodeId,
+    nodes,
+    setEditingNodeId,
+  ]);
 
   const onConnect: OnConnect = useCallback(
     (params) => {
@@ -284,6 +351,15 @@ const AutomationBuilder = () => {
           nodeTypes={nodeTypes}
         >
           <Panel position="top-right" className="automation-builder__top-right">
+            <button
+              type="button"
+              className="shortcuts-help-btn"
+              onClick={() => setShortcutsModalOpen(true)}
+              title="Keyboard shortcuts (Ctrl+/)"
+              aria-label="Show keyboard shortcuts"
+            >
+              ?
+            </button>
             <ThemeToggle />
           </Panel>
           <ValidationPanel result={validationResult} nodes={nodes} />
@@ -302,6 +378,11 @@ const AutomationBuilder = () => {
         initialType={editingNodeType}
         onSave={handleSaveNodeEdit}
         onClose={handleCloseNodeEdit}
+      />
+
+      <KeyboardShortcutsModal
+        isOpen={shortcutsModalOpen}
+        onClose={() => setShortcutsModalOpen(false)}
       />
     </div>
   );

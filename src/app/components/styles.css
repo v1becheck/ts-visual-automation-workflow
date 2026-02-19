@@ -225,6 +225,66 @@
   background: var(--sky-400);
 }
 
+/* ---- Keyboard shortcuts modal ---- */
+.keyboard-shortcuts-modal {
+  max-width: 28rem;
+}
+
+.keyboard-shortcuts-modal__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.keyboard-shortcuts-modal__hint {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  color: var(--slate-400);
+}
+
+.keyboard-shortcuts-modal__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.keyboard-shortcuts-modal__table th,
+.keyboard-shortcuts-modal__table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.keyboard-shortcuts-modal__table th {
+  font-weight: 600;
+  color: var(--slate-400);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.keyboard-shortcuts-modal__table td {
+  color: var(--slate-200);
+}
+
+.keyboard-shortcuts-modal__kbd {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-default);
+  border-radius: 0.25rem;
+  white-space: nowrap;
+}
+
+.keyboard-shortcuts-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .overview * {
   box-sizing: border-box;
 }
@@ -276,6 +336,32 @@
 }
 
 /* ---- Theme toggle ---- */
+.shortcuts-help-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 1.125rem;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.shortcuts-help-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--slate-800);
+}
+
+[data-theme="light"] .shortcuts-help-btn:hover {
+  background: var(--slate-200);
+}
+
 .theme-toggle {
   position: relative;
   display: flex;
