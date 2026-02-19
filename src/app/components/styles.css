@@ -243,6 +243,85 @@
   height: 100%;
 }
 
+/* ---- Workflow validation panel ---- */
+.validation-panel {
+  margin: 0.75rem;
+}
+
+.validation-panel__content {
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-default);
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  max-width: 20rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.validation-panel__content--invalid {
+  border-color: var(--amber-500);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.validation-panel__status {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.validation-panel__status--valid {
+  color: var(--emerald-400);
+}
+
+.validation-panel__status--invalid {
+  color: var(--amber-400);
+}
+
+.validation-panel__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.validation-panel__issues {
+  margin-top: 0.25rem;
+}
+
+.validation-panel__section {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--slate-300);
+}
+
+.validation-panel__section strong {
+  color: var(--slate-200);
+  font-weight: 600;
+}
+
+.validation-panel__list {
+  margin: 0.25rem 0 0;
+  padding-left: 1rem;
+}
+
+.validation-panel__list li {
+  margin-bottom: 0.125rem;
+}
+
+/* Node validation error state (cycle / orphaned) */
+.overview .react-flow__node.node-validation-error {
+  outline: 2px solid var(--amber-500);
+  outline-offset: 2px;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.overview .react-flow__node.node-validation-error.selected {
+  outline-color: var(--amber-400);
+}
+
 /* ---- Sidebar (node palette) ---- */
 .automation-builder aside.sidebar {
   width: 16rem;

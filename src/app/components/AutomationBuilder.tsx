@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   addEdge,
   Background,
@@ -17,7 +17,9 @@ import {
 
 import Sidebar from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
+import ValidationPanel from "./ValidationPanel";
 import { useDnD } from "../contexts/DnDContext";
+import { validateWorkflow } from "../lib/workflowValidation";
 
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -166,11 +168,32 @@ const AutomationBuilder = () => {
     setEditingNodeId(null);
   }, []);
 
+  const validationResult = useMemo(
+    () =>
+      validateWorkflow(
+        nodes.map((n) => ({ id: n.id })),
+        edges.map((e) => ({ source: e.source, target: e.target }))
+      ),
+    [nodes, edges]
+  );
+
+  const nodesWithValidation = useMemo(() => {
+    const errorIds = new Set<string>([
+      ...validationResult.orphanedNodeIds,
+      ...validationResult.cycles.flat(),
+    ]);
+    return nodes.map((n) =>
+      errorIds.has(n.id)
+        ? { ...n, className: [n.className, "node-validation-error"].filter(Boolean).join(" ") }
+        : n
+    );
+  }, [nodes, validationResult]);
+
   return (
     <div className="automation-builder">
       <div className="reactflow-wrapper" ref={reactFlowWrapper}>
         <ReactFlow
-          nodes={nodes}
+          nodes={nodesWithValidation}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -182,6 +205,7 @@ const AutomationBuilder = () => {
           onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
         >
+          <ValidationPanel result={validationResult} nodes={nodes} />
           <CustomMinimapWithEdges />
           <Controls />
           <Background />
