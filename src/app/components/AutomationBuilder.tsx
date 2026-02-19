@@ -18,6 +18,7 @@ import {
 
 import Sidebar, { type WorkflowListItem } from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
+import EdgeEditModal from "./EdgeEditModal";
 import ValidationPanel from "./ValidationPanel";
 import UndoRedoPanel from "./UndoRedoPanel";
 import ExportImportPanel from "./ExportImportPanel";
@@ -111,6 +112,8 @@ const AutomationBuilder = () => {
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingNodeLabel, setEditingNodeLabel] = useState("");
   const [editingNodeType, setEditingNodeType] = useState<NodeTypeOption>("default");
+  const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
+  const [editingEdgeLabel, setEditingEdgeLabel] = useState("");
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
@@ -394,9 +397,47 @@ const AutomationBuilder = () => {
       }));
     pushStateBefore(nodes, edges);
     markAction();
-    setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...newNodes]);
-    setEdges((eds) => [...eds.map((e) => ({ ...e, selected: false })), ...newEdges]);
+    // Defer to next frame so React Flow's internal state doesn't overwrite our update
+    requestAnimationFrame(() => {
+      setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...newNodes]);
+      setEdges((eds) => [...eds.map((e) => ({ ...e, selected: false })), ...newEdges]);
+    });
   }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges, screenToFlowPosition]);
+
+  const DUPLICATE_OFFSET = 80;
+
+  const duplicateSelected = useCallback(() => {
+    const selectedNodes = nodes.filter((n) => n.selected);
+    if (selectedNodes.length === 0) return;
+    const selectedIds = new Set(selectedNodes.map((n) => n.id));
+    const selectedEdges = edges.filter(
+      (e) => selectedIds.has(e.source) && selectedIds.has(e.target)
+    );
+    const idMap = new Map<string, string>();
+    selectedNodes.forEach((n) => idMap.set(n.id, getId()));
+    const newNodes: Node[] = selectedNodes.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: {
+        x: n.position.x + DUPLICATE_OFFSET,
+        y: n.position.y + DUPLICATE_OFFSET,
+      },
+      selected: true,
+    }));
+    const newEdges: Edge[] = selectedEdges.map((e, i) => ({
+      ...e,
+      id: `dup_e_${Date.now()}_${i}`,
+      source: idMap.get(e.source)!,
+      target: idMap.get(e.target)!,
+    }));
+    pushStateBefore(nodes, edges);
+    markAction();
+    // Defer to next frame so React Flow's internal state doesn't overwrite our update
+    requestAnimationFrame(() => {
+      setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...newNodes]);
+      setEdges((eds) => [...eds.map((e) => ({ ...e, selected: false })), ...newEdges]);
+    });
+  }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -435,19 +476,27 @@ const AutomationBuilder = () => {
         e.preventDefault();
         if (editingNodeId !== null) {
           setEditingNodeId(null);
+        } else if (editingEdgeId !== null) {
+          setEditingEdgeId(null);
         } else {
           deselectAll();
         }
         return;
       }
-      if (e.key === "Enter" && editingNodeId === null) {
-        const selected = nodes.filter((n) => n.selected);
-        if (selected.length === 1) {
+      if (e.key === "Enter" && editingNodeId === null && editingEdgeId === null) {
+        const selectedNodes = nodes.filter((n) => n.selected);
+        const selectedEdges = edges.filter((e) => e.selected);
+        if (selectedNodes.length === 1) {
           e.preventDefault();
-          const node = selected[0];
+          const node = selectedNodes[0];
           setEditingNodeId(node.id);
           setEditingNodeLabel(getNodeLabel(node));
           setEditingNodeType(getNodeType(node));
+        } else if (selectedEdges.length === 1) {
+          e.preventDefault();
+          const edge = selectedEdges[0];
+          setEditingEdgeId(edge.id);
+          setEditingEdgeLabel((edge as Edge & { label?: string }).label ?? "");
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -463,6 +512,11 @@ const AutomationBuilder = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === "v") {
         e.preventDefault();
         pasteFromClipboard();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        duplicateSelected();
         return;
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "/") {
@@ -481,10 +535,15 @@ const AutomationBuilder = () => {
     deleteSelected,
     copySelected,
     pasteFromClipboard,
+    duplicateSelected,
     deselectAll,
     editingNodeId,
+    editingEdgeId,
     nodes,
+    edges,
     setEditingNodeId,
+    setEditingEdgeId,
+    setEditingEdgeLabel,
   ]);
 
   const onConnect: OnConnect = useCallback(
@@ -561,6 +620,28 @@ const AutomationBuilder = () => {
     },
     [nodes, edges, pushStateBefore, markAction, setEdges]
   );
+
+  const onEdgeDoubleClick = useCallback((_: React.MouseEvent, edge: Edge) => {
+    const label = (edge as Edge & { label?: string }).label ?? "";
+    setEditingEdgeId(edge.id);
+    setEditingEdgeLabel(label);
+  }, []);
+
+  const handleSaveEdgeEdit = useCallback(
+    (edgeId: string, label: string) => {
+      pushStateBefore(nodes, edges);
+      markAction();
+      setEdges((eds) =>
+        eds.map((e) => (e.id === edgeId ? { ...e, label: label || undefined } : e))
+      );
+      setEditingEdgeId(null);
+    },
+    [nodes, edges, pushStateBefore, markAction, setEdges]
+  );
+
+  const handleCloseEdgeEdit = useCallback(() => {
+    setEditingEdgeId(null);
+  }, []);
 
   const handleSaveNodeEdit = useCallback(
     (nodeId: string, label: string, nodeType: NodeTypeOption) => {
@@ -685,6 +766,7 @@ const AutomationBuilder = () => {
           onNodeDoubleClick={onNodeDoubleClick}
           onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
+          onEdgeDoubleClick={onEdgeDoubleClick}
           nodeTypes={nodeTypes}
           elementsSelectable
           selectionOnDrag
@@ -765,6 +847,14 @@ const AutomationBuilder = () => {
         initialType={editingNodeType}
         onSave={handleSaveNodeEdit}
         onClose={handleCloseNodeEdit}
+      />
+
+      <EdgeEditModal
+        isOpen={editingEdgeId !== null}
+        edgeId={editingEdgeId}
+        initialLabel={editingEdgeLabel}
+        onSave={handleSaveEdgeEdit}
+        onClose={handleCloseEdgeEdit}
       />
 
       <KeyboardShortcutsModal

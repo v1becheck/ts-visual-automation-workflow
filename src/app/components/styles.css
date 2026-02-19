@@ -227,7 +227,7 @@
 
 /* ---- Keyboard shortcuts modal ---- */
 .keyboard-shortcuts-modal {
-  max-width: 28rem;
+  max-width: 36rem;
 }
 
 .keyboard-shortcuts-modal__title {
@@ -1407,6 +1407,18 @@
 .overview .react-flow__edge.selected .react-flow__edge-path,
 .overview .react-flow__edge:hover .react-flow__edge-path {
   stroke: rgba(56, 189, 248, 0.8);
+}
+
+/* Edge labels */
+.overview .react-flow__edge-text {
+  fill: var(--slate-200);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.overview .react-flow__edge-textbg {
+  fill: var(--slate-900);
+  stroke: var(--slate-600);
+  stroke-width: 1;
 }
 
 .overview .react-flow__controls button {
