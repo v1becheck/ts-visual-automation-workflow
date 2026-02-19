@@ -114,7 +114,7 @@ export default function NodeEditModal({
         </h2>
         <form onSubmit={handleSubmit}>
           <label htmlFor="node-edit-label" className="node-edit-modal-label">
-            Name / Label
+            Label
           </label>
           <input
             ref={inputRef}
@@ -129,7 +129,7 @@ export default function NodeEditModal({
             aria-required="true"
           />
 
-          <label className="node-edit-modal-label">Type / Color</label>
+          <label className="node-edit-modal-label">Type</label>
           <div className="node-edit-modal-type-options" role="group">
             {NODE_TYPE_OPTIONS.map(({ value, label }) => (
               <label
