@@ -6,9 +6,9 @@
 
 ## Overview
 
-The app lets you build automation workflows by dragging nodes onto a canvas and connecting them with edges. Each node represents an action or trigger (e.g. webhook, email, delay); edges define the flow. You can edit node labels and types in a modal, validate the workflow (cycles, orphaned nodes), undo/redo, use templates, and export/import workflows as JSON. Workflows are persisted to MongoDB (local or Atlas) with debounced auto-save.
+The app lets you build automation workflows by dragging nodes onto a canvas and connecting them with edges. Each node represents an action or trigger (e.g. webhook, email, delay); edges define the flow. You can edit node labels and types in a modal, add labels to edges (double-click edge), validate the workflow (cycles, orphaned nodes), undo/redo, copy/paste/duplicate nodes, and export/import workflows as JSON. Workflows are persisted to MongoDB (local or Atlas) with manual save (and optional debounced auto-save).
 
-Main features: drag-and-drop node palette, node edit modal (name + type), workflow validation panel, undo/redo, export/import, workflow templates, dark/light theme, keyboard shortcuts, and full CRUD API with MongoDB persistence.
+**Main features:** Drag-and-drop node palette; node edit modal (label + type); edge labels (double-click edge or select + Enter); workflow list in sidebar (create, switch, rename, delete); manual Save + “Unsaved” indicator and Ctrl+S; workflow validation panel; undo/redo; copy (Ctrl+C), paste at cursor (Ctrl+V), duplicate (Ctrl+D); multi-select (Shift+drag box, Ctrl+click to add); “Go to node” search; export/import; workflow templates; dark/light theme; minimap with zoom (buttons + scroll) and drag-to-pan; keyboard shortcuts (Ctrl+/).
 
 ## Tech Stack
 
@@ -62,6 +62,7 @@ If `MONGODB_URI` is not set, the app still runs: the default workflow is in-memo
 
 - **GET /api/automation** – Returns the first workflow (or creates one). Query `?id=...` loads a specific workflow. Without DB config, returns default in-memory workflow.
 - **PUT /api/automation** – Body: `{ id, nodes?, edges?, name? }`. Updates the workflow (requires DB).
+- **GET /api/automations** – List workflows. Returns `[{ id, name, createdAt, updatedAt }, ...]`.
 - **POST /api/automations** – Create workflow. Body (optional): `{ name?, nodes?, edges? }`. Returns `{ id, name, nodes, edges, createdAt, updatedAt }`.
 - **GET /api/automations/:id** – Get one workflow.
 - **PUT /api/automations/:id** – Update workflow. Body: `{ name?, nodes?, edges? }`.
@@ -71,13 +72,13 @@ Errors return appropriate status codes (400, 404, 503) and a JSON `{ error: "...
 
 ### Frontend
 
-On load, the builder calls **GET /api/automation**, stores the returned `id`, `nodes`, and `edges`, and keeps the current workflow id in state. Changes to nodes/edges are **debounced** (1.5s); when the delay elapses, the app sends **PUT /api/automation** with `{ id, nodes, edges }` so the current workflow is persisted. If no DB is configured, `id` is null and no save requests are sent.
+On load, the builder fetches the workflow list (**GET /api/automations**) and loads the first workflow (or a selected one). The sidebar shows **Workflows**: create new, switch by name, rename (inline), and delete. The current workflow is persisted via **manual Save** (button or Ctrl+S) and optionally **debounced auto-save** (1.5s); both send **PUT /api/automation** (or PUT/automations/:id for renames). If no DB is configured, workflows are in-memory only.
+
+**Shortcuts (Ctrl+/ in-app):** Undo/Redo (Ctrl+Z / Ctrl+Shift+Z), Save (Ctrl+S), Copy/Paste/Duplicate (Ctrl+C / Ctrl+V / Ctrl+D), multi-select (Shift+drag, Ctrl+click), pan (Space + drag), Go to node (search at top), edit node/edge (Enter when selected), delete (Ctrl+Click or Delete/Backspace).
 
 ### Trade-offs
 
-- **Single workflow in the UI** – The app loads “the first” workflow (or creates one). There is no list of workflows or switching; full CRUD is available via API for future use.
 - **No auth** – The API is open; fine for a demo/portfolio, but production would need authentication and per-user or per-tenant workflows.
-- **Debounced save only** – No explicit “Save” button; changes persist after 1.5s of inactivity. A manual save would improve clarity.
 - **Nodes/edges as Mixed** – Stored as flexible JSON in MongoDB so React Flow schema changes don’t require migrations; stricter validation could be added later.
 
 ## Testing
@@ -93,11 +94,9 @@ Coverage includes at least the main page render. With more time: unit tests for 
 ## What I’d Improve With More Time
 
 1. **Auth** – Sign-in and scope workflows to users (or API keys for programmatic access).
-2. **Workflow list** – UI to create, open, duplicate, and delete workflows instead of a single “first” workflow.
-3. **Manual save** – Save button plus optional auto-save, with “unsaved changes” indicator.
-4. **Tests** – Broader unit tests (validation, export/import), API integration tests, and E2E for critical paths.
-5. **Rate limiting** – Protect the API from abuse when public.
-6. **Error feedback** – Toasts or inline messages for save/load failures instead of only console.
+2. **Tests** – Broader unit tests (validation, export/import), API integration tests, and E2E for critical paths.
+3. **Rate limiting** – Protect the API from abuse when public.
+4. **Error feedback** – Toasts or inline messages for save/load failures instead of only console.
 
 ## Challenge Requirements (Reference)
 
