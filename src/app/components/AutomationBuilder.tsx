@@ -111,17 +111,50 @@ const AutomationBuilder = () => {
   const [editingNodeLabel, setEditingNodeLabel] = useState("");
   const [editingNodeType, setEditingNodeType] = useState<NodeTypeOption>("default");
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const initialLoadDoneRef = useRef(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const SAVE_DEBOUNCE_MS = 1500;
 
-  // we load the data from the server on mount
+  // Load workflow from server on mount (first workflow or create one)
   useEffect(() => {
     const getData = async () => {
-      const data = await fetch("/api/automation");
-      const automation = await data.json();
-      setNodes(automation.nodes);
-      setEdges(automation.edges);
+      try {
+        const res = await fetch("/api/automation");
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.error("Failed to load workflow:", err.error || res.statusText);
+          return;
+        }
+        const automation = await res.json();
+        setNodes(Array.isArray(automation.nodes) ? automation.nodes : []);
+        setEdges(Array.isArray(automation.edges) ? automation.edges : []);
+        if (automation.id) setWorkflowId(automation.id);
+      } finally {
+        setTimeout(() => {
+          initialLoadDoneRef.current = true;
+        }, 0);
+      }
     };
     getData();
   }, [setNodes, setEdges]);
+
+  // Debounced save when nodes/edges change (after initial load)
+  useEffect(() => {
+    if (!workflowId || !initialLoadDoneRef.current) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = null;
+      fetch("/api/automation", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: workflowId, nodes, edges }),
+      }).catch((err) => console.error("Failed to save workflow:", err));
+    }, SAVE_DEBOUNCE_MS);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [workflowId, nodes, edges]);
 
   const deleteSelected = useCallback(() => {
     const selectedNodeIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));

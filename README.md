@@ -15,14 +15,15 @@
 ### Prerequisites
 
 - Node.js 22 (use `nvm use`)
-- <!-- Database: PostgreSQL / MongoDB + any other requirements -->
+- **MongoDB** (optional for persistence): local instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account
 
 ### Installation & Setup
 
 ```bash
 nvm use
 npm i
-# Database setup: <!-- e.g. Docker, migrations, or connection steps -->
+cp .env.example .env
+# Edit .env and set MONGODB_URI (see below). If unset, the app runs with in-memory default workflow (no persistence).
 npm run dev
 ```
 
@@ -30,23 +31,38 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Environment
 
-Copy `.env.example` to `.env` and fill in the values. Required variables:
+Copy `.env.example` to `.env`. Optional but recommended for persistence:
 
-<!-- e.g. DATABASE_URL, NEXT_PUBLIC_*, etc. -->
+| Variable      | Description |
+|---------------|-------------|
+| `MONGODB_URI` | MongoDB connection string. **Local:** `mongodb://localhost:27017/automation`. **Atlas:** `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/automation?retryWrites=true&w=majority` |
+
+If `MONGODB_URI` is not set, the app still runs: the default workflow is in-memory only and changes are not persisted.
 
 ## Architecture & Design
 
 ### Database
 
-<!-- Schema overview: workflows, nodes, edges, metadata. Why this structure? -->
+**MongoDB** with **Mongoose**. Single collection: **Automation**.
+
+- **Schema:** `name` (string), `nodes` (array of Mixed – React Flow nodes), `edges` (array of Mixed – React Flow edges), `createdAt` / `updatedAt` (timestamps).
+- Workflows are stored as one document per automation; nodes and edges are stored as JSON-friendly arrays so React Flow types can evolve without migrations.
+- Works with a **local** MongoDB instance or **MongoDB Atlas**; set `MONGODB_URI` accordingly.
 
 ### API
 
-<!-- Endpoints and design choices: POST/GET/PUT/DELETE /api/automations, request/response shapes, error handling. -->
+- **GET /api/automation** – Returns the first workflow (or creates one). Query `?id=...` loads a specific workflow. Without DB config, returns default in-memory workflow.
+- **PUT /api/automation** – Body: `{ id, nodes?, edges?, name? }`. Updates the workflow (requires DB).
+- **POST /api/automations** – Create workflow. Body (optional): `{ name?, nodes?, edges? }`. Returns `{ id, name, nodes, edges, createdAt, updatedAt }`.
+- **GET /api/automations/:id** – Get one workflow.
+- **PUT /api/automations/:id** – Update workflow. Body: `{ name?, nodes?, edges? }`.
+- **DELETE /api/automations/:id** – Delete workflow.
+
+Errors return appropriate status codes (400, 404, 503) and a JSON `{ error: "..." }`.
 
 ### Frontend
 
-<!-- Key components, state management, how node editing and persistence work. -->
+On load, the builder calls **GET /api/automation**, stores the returned `id`, `nodes`, and `edges`, and keeps the current workflow id in state. Changes to nodes/edges are **debounced** (1.5s); when the delay elapses, the app sends **PUT /api/automation** with `{ id, nodes, edges }` so the current workflow is persisted. If no DB is configured, `id` is null and no save requests are sent.
 
 ### Trade-offs
 
