@@ -8,6 +8,7 @@ const SHORTCUTS: { action: string; keys: string }[] = [
   { action: "Save workflow", keys: "Ctrl+S" },
   { action: "Copy selected nodes", keys: "Ctrl+C" },
   { action: "Paste nodes", keys: "Ctrl+V" },
+  { action: "Select multiple", keys: "Shift+drag (box), Ctrl+click (add)" },
   { action: "Delete node or connection", keys: "Ctrl+Click, Delete or Backspace" },
   { action: "Close modal / Deselect all", keys: "Escape" },
   { action: "Edit selected node", keys: "Enter" },

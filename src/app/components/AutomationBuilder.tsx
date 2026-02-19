@@ -120,8 +120,8 @@ const AutomationBuilder = () => {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipDirtyRef = useRef(false);
   const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
+  const lastMouseScreenRef = useRef({ x: 0, y: 0 });
   const SAVE_DEBOUNCE_MS = 1500;
-  const PASTE_OFFSET = 50;
 
   const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
     try {
@@ -364,12 +364,22 @@ const AutomationBuilder = () => {
     if (!clipboard || clipboard.nodes.length === 0) return;
     const idMap = new Map<string, string>();
     clipboard.nodes.forEach((n) => idMap.set(n.id, getId()));
+    const targetFlow = screenToFlowPosition({
+      x: lastMouseScreenRef.current.x,
+      y: lastMouseScreenRef.current.y,
+    });
+    const cx =
+      clipboard.nodes.reduce((s, n) => s + n.position.x, 0) / clipboard.nodes.length;
+    const cy =
+      clipboard.nodes.reduce((s, n) => s + n.position.y, 0) / clipboard.nodes.length;
+    const dx = targetFlow.x - cx;
+    const dy = targetFlow.y - cy;
     const newNodes: Node[] = clipboard.nodes.map((n) => ({
       ...n,
       id: idMap.get(n.id)!,
       position: {
-        x: n.position.x + PASTE_OFFSET,
-        y: n.position.y + PASTE_OFFSET,
+        x: n.position.x + dx,
+        y: n.position.y + dy,
       },
       selected: true,
     }));
@@ -385,7 +395,15 @@ const AutomationBuilder = () => {
     markAction();
     setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...newNodes]);
     setEdges((eds) => [...eds.map((e) => ({ ...e, selected: false })), ...newEdges]);
-  }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]);
+  }, [nodes, edges, pushStateBefore, markAction, setNodes, setEdges, screenToFlowPosition]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      lastMouseScreenRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -667,6 +685,12 @@ const AutomationBuilder = () => {
           onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
           nodeTypes={nodeTypes}
+          elementsSelectable
+          selectionOnDrag
+          selectionKeyCode="Shift"
+          multiSelectionKeyCode={["Shift", "Control", "Meta"]}
+          panOnDrag={[1, 2]}
+          panActivationKeyCode="Space"
         >
           <Panel position="top-right" className="automation-builder__top-right">
             <button
