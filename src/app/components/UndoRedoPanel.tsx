@@ -7,12 +7,13 @@ type Props = {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  /** When true, render only the content (no Panel) for use inside a parent Panel. */
+  embedded?: boolean;
 };
 
-export default function UndoRedoPanel({ undo, redo, canUndo, canRedo }: Props) {
-  return (
-    <Panel position="top-center" className="undo-redo-panel">
-      <div className="undo-redo-panel__buttons">
+export default function UndoRedoPanel({ undo, redo, canUndo, canRedo, embedded }: Props) {
+  const content = (
+    <div className="undo-redo-panel__buttons">
         <button
           type="button"
           className="undo-redo-panel__btn"
@@ -34,6 +35,13 @@ export default function UndoRedoPanel({ undo, redo, canUndo, canRedo }: Props) {
           Redo
         </button>
       </div>
+  );
+  if (embedded) {
+    return <div className="undo-redo-panel">{content}</div>;
+  }
+  return (
+    <Panel position="top-center" className="undo-redo-panel">
+      {content}
     </Panel>
   );
 }

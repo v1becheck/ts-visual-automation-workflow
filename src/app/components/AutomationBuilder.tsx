@@ -44,6 +44,7 @@ import CodeNode from "./nodes/CodeNode";
 import CustomMinimapWithEdges from "./CustomMinimapWithEdges";
 import ThemeToggle from "./ThemeToggle";
 import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
+import GoToNodePanel from "./GoToNodePanel";
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -692,6 +693,16 @@ const AutomationBuilder = () => {
           panOnDrag={[1, 2]}
           panActivationKeyCode="Space"
         >
+          <Panel position="top-center" className="top-center-stack">
+            <UndoRedoPanel
+              undo={undo}
+              redo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              embedded
+            />
+            <GoToNodePanel nodes={nodes} setNodes={setNodes} embedded />
+          </Panel>
           <Panel position="top-right" className="automation-builder__top-right">
             <button
               type="button"
@@ -732,7 +743,6 @@ const AutomationBuilder = () => {
               <ValidationPanel result={validationResult} nodes={nodes} embedded />
             </div>
           </Panel>
-          <UndoRedoPanel undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} />
           <CustomMinimapWithEdges />
           <Controls />
           <Background />
