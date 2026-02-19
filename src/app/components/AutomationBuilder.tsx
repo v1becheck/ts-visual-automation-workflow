@@ -114,8 +114,11 @@ const AutomationBuilder = () => {
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const initialLoadDoneRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipDirtyRef = useRef(false);
   const SAVE_DEBOUNCE_MS = 1500;
 
   const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
@@ -132,6 +135,22 @@ const AutomationBuilder = () => {
     }
   }, []);
 
+  const saveCurrentWorkflow = useCallback(async (): Promise<boolean> => {
+    if (!workflowId) return false;
+    try {
+      const res = await fetch("/api/automation", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: workflowId, nodes, edges }),
+      });
+      if (res.ok) setIsDirty(false);
+      return res.ok;
+    } catch (err) {
+      console.error("Failed to save workflow:", err);
+      return false;
+    }
+  }, [workflowId, nodes, edges]);
+
   const loadWorkflow = useCallback(
     async (id: string) => {
       try {
@@ -142,9 +161,11 @@ const AutomationBuilder = () => {
           return;
         }
         const data = await res.json();
+        skipDirtyRef.current = true;
         setNodes(Array.isArray(data.nodes) ? data.nodes : []);
         setEdges(Array.isArray(data.edges) ? data.edges : []);
         setWorkflowId(data.id);
+        setIsDirty(false);
       } catch (err) {
         console.error("Failed to load workflow:", err);
       }
@@ -165,9 +186,11 @@ const AutomationBuilder = () => {
         return;
       }
       const data = await res.json();
+      skipDirtyRef.current = true;
       setNodes(Array.isArray(data.nodes) ? data.nodes : []);
       setEdges(Array.isArray(data.edges) ? data.edges : []);
       setWorkflowId(data.id);
+      setIsDirty(false);
       await fetchWorkflows();
     } catch (err) {
       console.error("Failed to create workflow:", err);
@@ -242,6 +265,7 @@ const AutomationBuilder = () => {
           setNodes(Array.isArray(automation.nodes) ? automation.nodes : []);
           setEdges(Array.isArray(automation.edges) ? automation.edges : []);
           if (automation.id) setWorkflowId(automation.id);
+          setIsDirty(false);
         }
         if (listRes.ok) {
           const list = await listRes.json();
@@ -259,22 +283,36 @@ const AutomationBuilder = () => {
     getData();
   }, [setNodes, setEdges]);
 
-  // Debounced save when nodes/edges change (after initial load)
+  // Mark dirty when nodes/edges change (after initial load and when we have a workflow)
+  useEffect(() => {
+    if (skipDirtyRef.current) {
+      skipDirtyRef.current = false;
+      return;
+    }
+    if (!initialLoadDoneRef.current || !workflowId) return;
+    setIsDirty(true);
+  }, [nodes, edges, workflowId]);
+
+  // Debounced auto-save when nodes/edges change (after initial load)
   useEffect(() => {
     if (!workflowId || !initialLoadDoneRef.current) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       saveTimeoutRef.current = null;
-      fetch("/api/automation", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: workflowId, nodes, edges }),
-      }).catch((err) => console.error("Failed to save workflow:", err));
+      saveCurrentWorkflow();
     }, SAVE_DEBOUNCE_MS);
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [workflowId, nodes, edges]);
+  }, [workflowId, nodes, edges, saveCurrentWorkflow]);
+
+  const handleManualSave = useCallback(async () => {
+    if (!workflowId || isSaving) return;
+    setIsSaving(true);
+    const ok = await saveCurrentWorkflow();
+    setIsSaving(false);
+    if (!ok) window.alert("Failed to save workflow.");
+  }, [workflowId, isSaving, saveCurrentWorkflow]);
 
   const deleteSelected = useCallback(() => {
     const selectedNodeIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));
@@ -350,6 +388,11 @@ const AutomationBuilder = () => {
           setEditingNodeType(getNodeType(node));
         }
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (workflowId && !isSaving) handleManualSave();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "/") {
         e.preventDefault();
         setShortcutsModalOpen((open) => !open);
@@ -360,6 +403,9 @@ const AutomationBuilder = () => {
   }, [
     undo,
     redo,
+    workflowId,
+    isSaving,
+    handleManualSave,
     deleteSelected,
     deselectAll,
     editingNodeId,
@@ -581,6 +627,23 @@ const AutomationBuilder = () => {
           </Panel>
           <Panel position="top-left" className="top-left-panel">
             <div className="top-left-panel__column">
+              <div className="save-row">
+                <button
+                  type="button"
+                  className="save-row__btn"
+                  onClick={handleManualSave}
+                  disabled={!workflowId || isSaving}
+                  title={workflowId ? "Save workflow (Ctrl+S)" : "No workflow to save"}
+                  aria-label="Save workflow"
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </button>
+                {isDirty && (
+                  <span className="save-row__unsaved" aria-live="polite">
+                    Unsaved
+                  </span>
+                )}
+              </div>
               <ExportImportPanel
                 nodes={nodes}
                 edges={edges}

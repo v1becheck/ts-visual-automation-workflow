@@ -5,6 +5,7 @@ import { useEffect } from "react";
 const SHORTCUTS: { action: string; keys: string }[] = [
   { action: "Undo", keys: "Ctrl+Z" },
   { action: "Redo", keys: "Ctrl+Shift+Z or Ctrl+Y" },
+  { action: "Save workflow", keys: "Ctrl+S" },
   { action: "Delete node or connection", keys: "Ctrl+Click, Delete or Backspace" },
   { action: "Close modal / Deselect all", keys: "Escape" },
   { action: "Edit selected node", keys: "Enter" },

@@ -392,6 +392,41 @@
   gap: 0.5rem;
 }
 
+/* ---- Save row + unsaved indicator ---- */
+.save-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.save-row__btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--slate-200);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.save-row__btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.save-row__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-row__unsaved {
+  font-size: 0.75rem;
+  color: var(--amber-400);
+  font-weight: 500;
+}
+
 /* ---- Export / Import panel ---- */
 .export-import-panel {
   margin: 0;
@@ -1416,6 +1451,18 @@
 
 [data-theme="light"] .export-import-panel__btn:hover {
   background: var(--slate-200);
+}
+
+[data-theme="light"] .save-row__btn {
+  background: var(--card-bg);
+}
+
+[data-theme="light"] .save-row__btn:hover:not(:disabled) {
+  background: var(--slate-200);
+}
+
+[data-theme="light"] .save-row__unsaved {
+  color: var(--amber-600);
 }
 
 [data-theme="light"] .overview .react-flow__minimap,
