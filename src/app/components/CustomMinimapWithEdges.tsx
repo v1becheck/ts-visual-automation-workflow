@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { Panel, useStore } from "@xyflow/react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Panel, useStore, useReactFlow } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
 
 const DEFAULT_MINIMAP_WIDTH = 200;
@@ -49,6 +49,7 @@ function getNodeDimensions(userNode: Node): { width: number; height: number } {
 }
 
 export default function CustomMinimapWithEdges() {
+  const { setViewport } = useReactFlow();
   const { nodeLookup, edges, transform, width: flowWidth, height: flowHeight } = useStore(
     (s) => ({
       nodeLookup: s.nodeLookup,
@@ -59,7 +60,11 @@ export default function CustomMinimapWithEdges() {
     })
   );
 
-  const { nodeRects, viewBox, maskPath, elementWidth, elementHeight } = useMemo(() => {
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
+
+  const { nodeRects, viewBox, maskPath, elementWidth, elementHeight, flowScaleX, flowScaleY } =
+    useMemo(() => {
     const [tx, ty, zoom] = transform;
     const viewBB = {
       x: -tx / zoom,
@@ -111,6 +116,8 @@ export default function CustomMinimapWithEdges() {
     const maskPath =
       `M ${vx - offset} ${vy - offset} h ${vw + offset * 2} v ${vh + offset * 2} h ${-vw - offset * 2} z ` +
       `M ${viewBB.x} ${viewBB.y} h ${viewBB.width} v ${viewBB.height} h ${-viewBB.width} z`;
+    const flowScaleX = vw / elementWidth;
+    const flowScaleY = vh / elementHeight;
 
     return {
       nodeRects,
@@ -118,6 +125,8 @@ export default function CustomMinimapWithEdges() {
       maskPath,
       elementWidth,
       elementHeight,
+      flowScaleX,
+      flowScaleY,
     };
   }, [nodeLookup, transform, flowWidth, flowHeight]);
 
@@ -140,6 +149,53 @@ export default function CustomMinimapWithEdges() {
       });
   }, [nodeRects, edges]);
 
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const [tx, ty] = transform;
+      panStartRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        vx: tx,
+        vy: ty,
+      };
+      setIsPanning(true);
+      svg.setPointerCapture(e.pointerId);
+    },
+    [transform]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      const start = panStartRef.current;
+      if (!start) return;
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const dx = e.clientX - rect.left - start.x;
+      const dy = e.clientY - rect.top - start.y;
+      const flowDx = dx * flowScaleX;
+      const flowDy = dy * flowScaleY;
+      setViewport({
+        x: start.vx - flowDx,
+        y: start.vy - flowDy,
+        zoom: transform[2],
+      });
+    },
+    [flowScaleX, flowScaleY, transform, setViewport]
+  );
+
+  const handlePointerUp = useCallback(() => {
+    panStartRef.current = null;
+    setIsPanning(false);
+  }, []);
+
   return (
     <Panel
       position="bottom-right"
@@ -148,12 +204,19 @@ export default function CustomMinimapWithEdges() {
       data-testid="rf__minimap"
     >
       <svg
+        ref={svgRef}
         width={elementWidth}
         height={elementHeight}
         viewBox={viewBox}
         className="react-flow__minimap-svg"
         role="img"
-        aria-label="Workflow overview"
+        aria-label="Workflow overview. Drag to pan the canvas."
+        style={{ cursor: isPanning ? "grabbing" : "grab" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         <title>Workflow overview</title>
         {/* Edges (connectors) in flow coordinates */}
