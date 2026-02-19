@@ -44,7 +44,7 @@ Copy `.env.example` to `.env`. Optional but recommended for persistence:
 
 | Variable      | Description |
 |---------------|-------------|
-| `MONGODB_URI` | MongoDB connection string. **Local:** `mongodb://localhost:27017/automation`. **Atlas:** `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/automation?retryWrites=true&w=majority` |
+| `MONGODB_URI` | MongoDB connection string. <br> - **Local:** `mongodb://localhost:27017/automation` <br> - **Atlas:** `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/automation?retryWrites=true&w=majority` |
 
 If `MONGODB_URI` is not set, the app still runs: the default workflow is in-memory only and changes are not persisted.
 
