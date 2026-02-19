@@ -4,6 +4,35 @@ import Automation from "@/app/models/Automation";
 import { initialNodes, initialEdges } from "@/app/Constants";
 
 /**
+ * GET /api/automations – list all workflows (id, name, createdAt, updatedAt).
+ */
+export async function GET() {
+  try {
+    if (!(await dbConnect())) {
+      return Response.json([]);
+    }
+    const docs = await Automation.find({})
+      .sort({ updatedAt: -1 })
+      .select("_id name createdAt updatedAt")
+      .lean();
+    return Response.json(
+      docs.map((d) => ({
+        id: d._id.toString(),
+        name: d.name,
+        createdAt: d.createdAt,
+        updatedAt: d.updatedAt,
+      }))
+    );
+  } catch (err) {
+    console.error("GET /api/automations", err);
+    return Response.json(
+      { error: err instanceof Error ? err.message : "Failed to list workflows" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * POST /api/automations – create a new workflow.
  * Body (optional): { name?, nodes?, edges? }
  */

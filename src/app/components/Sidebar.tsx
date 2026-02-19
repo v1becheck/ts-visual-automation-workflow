@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDnD } from "../contexts/DnDContext";
 import { WORKFLOW_TEMPLATES } from "../lib/workflowTemplates";
 import type { WorkflowTemplate } from "../lib/workflowTemplates";
 import "./styles.css";
+
+export type WorkflowListItem = {
+  id: string;
+  name: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 type NodeType =
   | "input"
@@ -57,11 +64,32 @@ const SIDEBAR_SECTIONS: { label: string; nodes: { type: NodeType; label: string 
 
 type SidebarProps = {
   onLoadTemplate?: (template: WorkflowTemplate) => void;
+  workflows?: WorkflowListItem[];
+  currentWorkflowId?: string | null;
+  onNewWorkflow?: () => void;
+  onSelectWorkflow?: (id: string) => void;
+  onRenameWorkflow?: (id: string, name: string) => void;
+  onDeleteWorkflow?: (id: string) => void;
 };
 
-const Sidebar = ({ onLoadTemplate }: SidebarProps) => {
+const Sidebar = ({
+  onLoadTemplate,
+  workflows = [],
+  currentWorkflowId,
+  onNewWorkflow,
+  onSelectWorkflow,
+  onRenameWorkflow,
+  onDeleteWorkflow,
+}: SidebarProps) => {
   const { setType } = useDnD();
   const [templatesOpen, setTemplatesOpen] = useState(true);
+  const [workflowsOpen, setWorkflowsOpen] = useState(true);
+  const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingWorkflowId) editInputRef.current?.focus();
+  }, [editingWorkflowId]);
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     setType(nodeType);
@@ -75,6 +103,105 @@ const Sidebar = ({ onLoadTemplate }: SidebarProps) => {
         <p className="sidebar-subtitle">Drag onto canvas</p>
       </header>
       <div className="sidebar-content">
+        {(onNewWorkflow ?? onSelectWorkflow) && (
+          <section className="sidebar-section sidebar-section--workflows">
+            <button
+              type="button"
+              className="sidebar-section-title sidebar-section-title--clickable"
+              onClick={() => setWorkflowsOpen((open) => !open)}
+              aria-expanded={workflowsOpen}
+              aria-controls="sidebar-workflows-list"
+            >
+              <span>Workflows</span>
+              <span className="sidebar-section-title__chevron" aria-hidden>
+                {workflowsOpen ? "▼" : "▶"}
+              </span>
+            </button>
+            <div id="sidebar-workflows-list" hidden={!workflowsOpen}>
+              {onNewWorkflow && (
+                <button
+                  type="button"
+                  className="sidebar-workflow-btn sidebar-workflow-btn--new"
+                  onClick={onNewWorkflow}
+                >
+                  + New workflow
+                </button>
+              )}
+              <ul className="sidebar-workflow-list" role="list">
+                {workflows.length === 0 && (
+                  <li className="sidebar-workflow-list__empty">No workflows yet</li>
+                )}
+                {workflows.map((w) => (
+                  <li key={w.id} className="sidebar-workflow-item">
+                    {editingWorkflowId === w.id ? (
+                      <input
+                        ref={editInputRef}
+                        type="text"
+                        className="sidebar-workflow-edit-input"
+                        defaultValue={w.name}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const value = (e.target as HTMLInputElement).value.trim();
+                            if (value) onRenameWorkflow?.(w.id, value);
+                            setEditingWorkflowId(null);
+                          }
+                          if (e.key === "Escape") setEditingWorkflowId(null);
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value.trim();
+                          if (value) onRenameWorkflow?.(w.id, value);
+                          setEditingWorkflowId(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="Workflow name"
+                      />
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className={`sidebar-workflow-btn ${currentWorkflowId === w.id ? "sidebar-workflow-btn--active" : ""}`}
+                          onClick={() => onSelectWorkflow?.(w.id)}
+                          title={w.name}
+                        >
+                          <span className="sidebar-workflow-btn__name">{w.name}</span>
+                        </button>
+                        {onRenameWorkflow && (
+                          <button
+                            type="button"
+                            className="sidebar-workflow-rename"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingWorkflowId(w.id);
+                            }}
+                            title="Rename workflow"
+                            aria-label={`Rename ${w.name}`}
+                          >
+                            ✎
+                          </button>
+                        )}
+                        {onDeleteWorkflow && (
+                          <button
+                            type="button"
+                            className="sidebar-workflow-delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteWorkflow(w.id);
+                            }}
+                            title="Delete workflow"
+                            aria-label={`Delete ${w.name}`}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
         {onLoadTemplate && (
           <section
             className={`sidebar-section sidebar-section--templates ${templatesOpen ? "sidebar-section--templates-open" : "sidebar-section--templates-closed"}`}

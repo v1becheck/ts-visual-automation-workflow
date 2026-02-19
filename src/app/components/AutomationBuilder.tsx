@@ -16,7 +16,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 
-import Sidebar from "./Sidebar";
+import Sidebar, { type WorkflowListItem } from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
 import ValidationPanel from "./ValidationPanel";
 import UndoRedoPanel from "./UndoRedoPanel";
@@ -112,24 +112,142 @@ const AutomationBuilder = () => {
   const [editingNodeType, setEditingNodeType] = useState<NodeTypeOption>("default");
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
   const initialLoadDoneRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const SAVE_DEBOUNCE_MS = 1500;
 
-  // Load workflow from server on mount (first workflow or create one)
-  useEffect(() => {
-    const getData = async () => {
+  const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
+    try {
+      const res = await fetch("/api/automations");
+      if (!res.ok) return [];
+      const list = await res.json();
+      const next = Array.isArray(list) ? list : [];
+      setWorkflows(next);
+      return next;
+    } catch {
+      setWorkflows([]);
+      return [];
+    }
+  }, []);
+
+  const loadWorkflow = useCallback(
+    async (id: string) => {
       try {
-        const res = await fetch("/api/automation");
+        const res = await fetch(`/api/automations/${id}`);
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           console.error("Failed to load workflow:", err.error || res.statusText);
           return;
         }
-        const automation = await res.json();
-        setNodes(Array.isArray(automation.nodes) ? automation.nodes : []);
-        setEdges(Array.isArray(automation.edges) ? automation.edges : []);
-        if (automation.id) setWorkflowId(automation.id);
+        const data = await res.json();
+        setNodes(Array.isArray(data.nodes) ? data.nodes : []);
+        setEdges(Array.isArray(data.edges) ? data.edges : []);
+        setWorkflowId(data.id);
+      } catch (err) {
+        console.error("Failed to load workflow:", err);
+      }
+    },
+    [setNodes, setEdges]
+  );
+
+  const createNewWorkflow = useCallback(async () => {
+    try {
+      const res = await fetch("/api/automations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Untitled workflow" }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        window.alert(err.error ?? "Failed to create workflow");
+        return;
+      }
+      const data = await res.json();
+      setNodes(Array.isArray(data.nodes) ? data.nodes : []);
+      setEdges(Array.isArray(data.edges) ? data.edges : []);
+      setWorkflowId(data.id);
+      await fetchWorkflows();
+    } catch (err) {
+      console.error("Failed to create workflow:", err);
+      window.alert("Failed to create workflow");
+    }
+  }, [setNodes, setEdges, fetchWorkflows]);
+
+  const renameWorkflow = useCallback(
+    async (id: string, name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      try {
+        const res = await fetch(`/api/automations/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: trimmed }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          window.alert(err.error ?? "Failed to rename workflow");
+          return;
+        }
+        await fetchWorkflows();
+      } catch (err) {
+        console.error("Failed to rename workflow:", err);
+        window.alert("Failed to rename workflow");
+      }
+    },
+    [fetchWorkflows]
+  );
+
+  const deleteWorkflow = useCallback(
+    async (id: string) => {
+      if (!window.confirm("Delete this workflow? This cannot be undone.")) return;
+      try {
+        const res = await fetch(`/api/automations/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          window.alert(err.error ?? "Failed to delete workflow");
+          return;
+        }
+        const wasCurrent = workflowId === id;
+        const list = await fetchWorkflows();
+        if (wasCurrent) {
+          const next = list.length > 0 ? list[0] : null;
+          if (next) {
+            await loadWorkflow(next.id);
+          } else {
+            setWorkflowId(null);
+            setNodes([]);
+            setEdges([]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to delete workflow:", err);
+        window.alert("Failed to delete workflow");
+      }
+    },
+    [workflowId, fetchWorkflows, loadWorkflow, setNodes, setEdges]
+  );
+
+  // Load initial workflow and workflow list on mount
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const [autoRes, listRes] = await Promise.all([
+          fetch("/api/automation"),
+          fetch("/api/automations"),
+        ]);
+        if (autoRes.ok) {
+          const automation = await autoRes.json();
+          setNodes(Array.isArray(automation.nodes) ? automation.nodes : []);
+          setEdges(Array.isArray(automation.edges) ? automation.edges : []);
+          if (automation.id) setWorkflowId(automation.id);
+        }
+        if (listRes.ok) {
+          const list = await listRes.json();
+          setWorkflows(Array.isArray(list) ? list : []);
+        }
+      } catch (err) {
+        console.error("Failed to load:", err);
       } finally {
         setTimeout(() => {
           initialLoadDoneRef.current = true;
@@ -465,7 +583,15 @@ const AutomationBuilder = () => {
           <Background />
         </ReactFlow>
       </div>
-      <Sidebar onLoadTemplate={loadTemplate} />
+      <Sidebar
+        onLoadTemplate={loadTemplate}
+        workflows={workflows}
+        currentWorkflowId={workflowId}
+        onNewWorkflow={createNewWorkflow}
+        onSelectWorkflow={loadWorkflow}
+        onRenameWorkflow={renameWorkflow}
+        onDeleteWorkflow={deleteWorkflow}
+      />
 
       <NodeEditModal
         isOpen={editingNodeId !== null}
