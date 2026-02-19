@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Panel, useStore, useReactFlow } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
 
@@ -49,16 +49,21 @@ function getNodeDimensions(userNode: Node): { width: number; height: number } {
 }
 
 export default function CustomMinimapWithEdges() {
-  const { setViewport } = useReactFlow();
-  const { nodeLookup, edges, transform, width: flowWidth, height: flowHeight } = useStore(
-    (s) => ({
+  const { setViewport, zoomIn, zoomOut } = useReactFlow();
+  const { nodeLookup, edges, transform, width: flowWidth, height: flowHeight, minZoom, maxZoom } =
+    useStore((s) => ({
       nodeLookup: s.nodeLookup,
       edges: s.edges,
       transform: s.transform,
       width: s.width,
       height: s.height,
-    })
-  );
+      minZoom: s.minZoom,
+      maxZoom: s.maxZoom,
+    }));
+
+  const zoom = transform[2];
+  const minZoomReached = zoom <= minZoom;
+  const maxZoomReached = zoom >= maxZoom;
 
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
@@ -196,13 +201,61 @@ export default function CustomMinimapWithEdges() {
     setIsPanning(false);
   }, []);
 
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY === 0) return;
+      if (e.deltaY < 0 && !maxZoomReached) {
+        zoomIn({ duration: 150 });
+      } else if (e.deltaY > 0 && !minZoomReached) {
+        zoomOut({ duration: 150 });
+      }
+    },
+    [zoomIn, zoomOut, minZoomReached, maxZoomReached]
+  );
+
+  const svgWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = svgWrapRef.current;
+    if (!el) return;
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
+
   return (
     <Panel
       position="bottom-right"
-      style={{ width: elementWidth, height: elementHeight }}
       className="react-flow__minimap automation-minimap"
       data-testid="rf__minimap"
     >
+      <div className="automation-minimap__wrap">
+        <div className="automation-minimap__zoom">
+          <button
+            type="button"
+            className="automation-minimap__zoom-btn"
+            onClick={() => zoomIn({ duration: 200 })}
+            disabled={maxZoomReached}
+            title="Zoom in"
+            aria-label="Zoom in"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="automation-minimap__zoom-btn"
+            onClick={() => zoomOut({ duration: 200 })}
+            disabled={minZoomReached}
+            title="Zoom out"
+            aria-label="Zoom out"
+          >
+            −
+          </button>
+        </div>
+        <div
+          ref={svgWrapRef}
+          className="automation-minimap__svg-wrap"
+          style={{ width: elementWidth, height: elementHeight }}
+        >
       <svg
         ref={svgRef}
         width={elementWidth}
@@ -250,6 +303,8 @@ export default function CustomMinimapWithEdges() {
           pointerEvents="none"
         />
       </svg>
+        </div>
+      </div>
     </Panel>
   );
 }

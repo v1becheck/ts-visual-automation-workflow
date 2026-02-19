@@ -1423,7 +1423,55 @@
 
 .overview .react-flow__minimap,
 .overview .automation-minimap {
-  background: var(--slate-900) !important;
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.automation-minimap__wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.automation-minimap__zoom {
+  display: flex;
+  flex-direction: row;
+  gap: 0.125rem;
+}
+
+.automation-minimap__zoom-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--slate-200);
+  background: var(--slate-900);
+  border: 1px solid var(--slate-600);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.automation-minimap__zoom-btn:hover:not(:disabled) {
+  background: var(--slate-800);
+  border-color: var(--slate-500);
+}
+
+.automation-minimap__zoom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.automation-minimap__svg-wrap {
+  background: var(--slate-900);
   border-radius: 0.75rem;
   border: 1px solid var(--slate-600);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
@@ -1431,8 +1479,9 @@
 }
 
 .overview .react-flow__minimap svg,
-.overview .automation-minimap svg {
+.overview .automation-minimap__svg-wrap svg {
   border-radius: 0.75rem;
+  display: block;
 }
 
 /* Minimap viewport mask: subtle so colored nodes stay visible */
@@ -1554,7 +1603,22 @@
 
 [data-theme="light"] .overview .react-flow__minimap,
 [data-theme="light"] .overview .automation-minimap {
-  background: var(--slate-100) !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] .automation-minimap__svg-wrap {
+  background: var(--slate-100);
+}
+
+[data-theme="light"] .automation-minimap__zoom-btn {
+  background: var(--slate-100);
+  border-color: var(--slate-400);
+  color: var(--slate-700);
+}
+
+[data-theme="light"] .automation-minimap__zoom-btn:hover:not(:disabled) {
+  background: var(--slate-200);
+  border-color: var(--slate-500);
 }
 
 [data-theme="light"] .overview .react-flow__minimap-mask {
