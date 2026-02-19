@@ -19,6 +19,7 @@ import {
 import Sidebar, { type WorkflowListItem } from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
 import EdgeEditModal from "./EdgeEditModal";
+import RunSimulationPanel from "./RunSimulationPanel";
 import ValidationPanel from "./ValidationPanel";
 import UndoRedoPanel from "./UndoRedoPanel";
 import ExportImportPanel from "./ExportImportPanel";
@@ -843,6 +844,17 @@ const AutomationBuilder = () => {
                 embedded
               />
               <ValidationPanel result={validationResult} nodes={nodes} embedded />
+              <RunSimulationPanel
+                nodes={nodes}
+                edges={edges}
+                valid={validationResult.valid}
+                onHighlightNodes={(nodeIds) => {
+                  setNodes((nds) =>
+                    nds.map((n) => ({ ...n, selected: nodeIds.includes(n.id) }))
+                  );
+                }}
+                embedded
+              />
             </div>
           </Panel>
           <CustomMinimapWithEdges />
