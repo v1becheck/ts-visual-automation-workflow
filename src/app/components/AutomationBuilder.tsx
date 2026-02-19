@@ -184,6 +184,10 @@ const AutomationBuilder = () => {
 
   const handleSaveNodeEdit = useCallback(
     (nodeId: string, label: string, nodeType: NodeTypeOption) => {
+      if (label === editingNodeLabel && nodeType === editingNodeType) {
+        setEditingNodeId(null);
+        return;
+      }
       pushStateBefore(nodes, edges);
       markAction();
       setNodes((nds) =>
@@ -199,7 +203,7 @@ const AutomationBuilder = () => {
       );
       setEditingNodeId(null);
     },
-    [setNodes, nodes, edges, pushStateBefore, markAction]
+    [setNodes, nodes, edges, pushStateBefore, markAction, editingNodeLabel, editingNodeType]
   );
 
   const handleCloseNodeEdit = useCallback(() => {
