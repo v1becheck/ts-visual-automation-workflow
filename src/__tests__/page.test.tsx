@@ -1,7 +1,9 @@
 import "@testing-library/jest-dom";
+import Home from "@/app/page";
 
-describe("Page", () => {
-  it("basic test", () => {
-    expect(true).toBe(true);
+describe("Home page", () => {
+  it("exports a valid page component", () => {
+    expect(Home).toBeDefined();
+    expect(typeof Home).toBe("function");
   });
 });
