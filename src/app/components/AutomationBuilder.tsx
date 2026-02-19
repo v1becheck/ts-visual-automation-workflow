@@ -264,6 +264,31 @@ const AutomationBuilder = () => {
     setEditingNodeType(getNodeType(node));
   }, []);
 
+  const onNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      pushStateBefore(nodes, edges);
+      markAction();
+      setNodes((nds) => nds.filter((n) => n.id !== node.id));
+      setEdges((eds) =>
+        eds.filter((e) => e.source !== node.id && e.target !== node.id)
+      );
+    },
+    [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
+  );
+
+  const onEdgeClick = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      pushStateBefore(nodes, edges);
+      markAction();
+      setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+    },
+    [nodes, edges, pushStateBefore, markAction, setEdges]
+  );
+
   const handleSaveNodeEdit = useCallback(
     (nodeId: string, label: string, nodeType: NodeTypeOption) => {
       if (label === editingNodeLabel && nodeType === editingNodeType) {
@@ -374,6 +399,8 @@ const AutomationBuilder = () => {
           onDrop={onDrop}
           onDragOver={onDragOver}
           onNodeDoubleClick={onNodeDoubleClick}
+          onNodeClick={onNodeClick}
+          onEdgeClick={onEdgeClick}
           nodeTypes={nodeTypes}
         >
           <Panel position="top-right" className="automation-builder__top-right">
