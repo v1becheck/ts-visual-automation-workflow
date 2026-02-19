@@ -6,17 +6,21 @@ export function isDbConfigured(): boolean {
   return Boolean(MONGODB_URI);
 }
 
+type MongooseConnection = typeof mongoose;
+type Cached = {
+  conn: MongooseConnection | null;
+  promise: Promise<MongooseConnection> | null;
+};
+
 declare global {
   // eslint-disable-next-line no-var
-  var mongoose:
-    | { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null }
-    | undefined;
+  var mongoose: Cached | undefined;
 }
 
-const cached = global.mongoose ?? { conn: null, promise: null };
+const cached: Cached = global.mongoose ?? { conn: null, promise: null };
 if (process.env.NODE_ENV !== "production") global.mongoose = cached;
 
-export async function dbConnect(): Promise<typeof mongoose | null> {
+export async function dbConnect(): Promise<MongooseConnection | null> {
   if (!MONGODB_URI) return null;
   if (cached.conn) return cached.conn;
   if (!cached.promise) {
