@@ -2,13 +2,22 @@
 
 > A node-based automation flow builder (inspired by tools like n8n). Built for the Senior Full-Stack Developer technical challenge.
 
+**Live demo (MongoDB Atlas):** [https://fs-coding-challenge-main.vercel.app/](https://fs-coding-challenge-main.vercel.app/)
+
 ## Overview
 
-<!-- Briefly describe what the app does and the main features implemented. -->
+The app lets you build automation workflows by dragging nodes onto a canvas and connecting them with edges. Each node represents an action or trigger (e.g. webhook, email, delay); edges define the flow. You can edit node labels and types in a modal, validate the workflow (cycles, orphaned nodes), undo/redo, use templates, and export/import workflows as JSON. Workflows are persisted to MongoDB (local or Atlas) with debounced auto-save.
+
+Main features: drag-and-drop node palette, node edit modal (name + type), workflow validation panel, undo/redo, export/import, workflow templates, dark/light theme, keyboard shortcuts, and full CRUD API with MongoDB persistence.
 
 ## Tech Stack
 
-<!-- List core technologies: Next.js, ReactFlow, database choice, etc. Add any libraries you introduced and why. -->
+- **Next.js 16** (App Router) – React framework, API routes, server-side env for DB.
+- **ReactFlow (@xyflow/react)** – Canvas, nodes, edges, minimap, controls.
+- **TypeScript** – Typed nodes/edges, API payloads, and app state.
+- **MongoDB + Mongoose** – Persistence; works with local MongoDB or MongoDB Atlas. Mongoose for schema, connection caching, and ODM.
+- **CSS** – Custom styles (no UI library); CSS variables for theming (dark/light).
+- **Jest + Testing Library** – Unit tests (e.g. page render). Run with `npm test`.
 
 ## Getting Started
 
@@ -66,17 +75,29 @@ On load, the builder calls **GET /api/automation**, stores the returned `id`, `n
 
 ### Trade-offs
 
-<!-- Decisions you made and what you’d do differently with more time or scale. -->
+- **Single workflow in the UI** – The app loads “the first” workflow (or creates one). There is no list of workflows or switching; full CRUD is available via API for future use.
+- **No auth** – The API is open; fine for a demo/portfolio, but production would need authentication and per-user or per-tenant workflows.
+- **Debounced save only** – No explicit “Save” button; changes persist after 1.5s of inactivity. A manual save would improve clarity.
+- **Nodes/edges as Mixed** – Stored as flexible JSON in MongoDB so React Flow schema changes don’t require migrations; stricter validation could be added later.
 
 ## Testing
 
-<!-- If you added tests: where they live, how to run them (`npm test`), what’s covered. -->
+Tests live in `src/__tests__/`. Run them with:
 
-<!-- If not: testing strategy — what you would test, which areas are critical, and how you’d approach it. -->
+```bash
+npm test
+```
+
+Coverage includes at least the main page render. With more time: unit tests for workflow validation and export/import parsing; integration tests for the CRUD API (e.g. create workflow, GET by id, update, delete); and E2E for core flows (add node, connect, edit, persist).
 
 ## What I’d Improve With More Time
 
-<!-- Prioritised list: performance, UX, tests, validation, extra features, etc. -->
+1. **Auth** – Sign-in and scope workflows to users (or API keys for programmatic access).
+2. **Workflow list** – UI to create, open, duplicate, and delete workflows instead of a single “first” workflow.
+3. **Manual save** – Save button plus optional auto-save, with “unsaved changes” indicator.
+4. **Tests** – Broader unit tests (validation, export/import), API integration tests, and E2E for critical paths.
+5. **Rate limiting** – Protect the API from abuse when public.
+6. **Error feedback** – Toasts or inline messages for save/load failures instead of only console.
 
 ## Challenge Requirements (Reference)
 
