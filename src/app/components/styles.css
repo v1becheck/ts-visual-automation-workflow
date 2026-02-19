@@ -243,6 +243,38 @@
   height: 100%;
 }
 
+/* ---- Undo / Redo panel ---- */
+.undo-redo-panel {
+  margin: 0.75rem;
+}
+
+.undo-redo-panel__buttons {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.undo-redo-panel__btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--slate-200);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.undo-redo-panel__btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.undo-redo-panel__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---- Workflow validation panel ---- */
 .validation-panel {
   margin: 0.75rem;

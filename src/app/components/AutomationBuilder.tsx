@@ -18,8 +18,10 @@ import {
 import Sidebar from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
 import ValidationPanel from "./ValidationPanel";
+import UndoRedoPanel from "./UndoRedoPanel";
 import { useDnD } from "../contexts/DnDContext";
 import { validateWorkflow } from "../lib/workflowValidation";
+import { useWorkflowHistory } from "../hooks/useWorkflowHistory";
 
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -87,6 +89,15 @@ const AutomationBuilder = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
+  const {
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    pushStateBefore,
+    markAction,
+  } = useWorkflowHistory(nodes, setNodes, edges, setEdges);
+
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingNodeLabel, setEditingNodeLabel] = useState("");
   const [editingNodeType, setEditingNodeType] = useState<NodeTypeOption>("default");
@@ -102,10 +113,29 @@ const AutomationBuilder = () => {
     getData();
   }, [setNodes, setEdges]);
 
-  // various callbacks
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
+
   const onConnect: OnConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (params) => {
+      pushStateBefore(nodes, edges);
+      markAction();
+      setEdges((eds) => addEdge(params, eds));
+    },
+    [setEdges, nodes, edges, pushStateBefore, markAction]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -118,6 +148,9 @@ const AutomationBuilder = () => {
       event.preventDefault();
 
       if (!type) return;
+
+      pushStateBefore(nodes, edges);
+      markAction();
 
       const position = screenToFlowPosition({
         x: event.clientX,
@@ -137,7 +170,7 @@ const AutomationBuilder = () => {
       setEditingNodeType(getNodeType(newNode));
       setEditingNodeId(newId);
     },
-    [screenToFlowPosition, type, setNodes]
+    [screenToFlowPosition, type, setNodes, nodes, edges, pushStateBefore, markAction]
   );
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
@@ -148,6 +181,8 @@ const AutomationBuilder = () => {
 
   const handleSaveNodeEdit = useCallback(
     (nodeId: string, label: string, nodeType: NodeTypeOption) => {
+      pushStateBefore(nodes, edges);
+      markAction();
       setNodes((nds) =>
         nds.map((n) =>
           n.id === nodeId
@@ -161,12 +196,41 @@ const AutomationBuilder = () => {
       );
       setEditingNodeId(null);
     },
-    [setNodes]
+    [setNodes, nodes, edges, pushStateBefore, markAction]
   );
 
   const handleCloseNodeEdit = useCallback(() => {
     setEditingNodeId(null);
   }, []);
+
+  const handleNodesChange = useCallback(
+    (changes: Parameters<typeof onNodesChange>[0]) => {
+      const hasRemove = changes.some((c) => (c as { type?: string }).type === "remove");
+      if (hasRemove) {
+        pushStateBefore(nodes, edges);
+        markAction();
+      }
+      onNodesChange(changes);
+    },
+    [onNodesChange, nodes, edges, pushStateBefore, markAction]
+  );
+
+  const handleEdgesChange = useCallback(
+    (changes: Parameters<typeof onEdgesChange>[0]) => {
+      const hasRemove = changes.some((c) => (c as { type?: string }).type === "remove");
+      if (hasRemove) {
+        pushStateBefore(nodes, edges);
+        markAction();
+      }
+      onEdgesChange(changes);
+    },
+    [onEdgesChange, nodes, edges, pushStateBefore, markAction]
+  );
+
+  const onNodeDragStart = useCallback(() => {
+    pushStateBefore(nodes, edges);
+    markAction();
+  }, [nodes, edges, pushStateBefore, markAction]);
 
   const validationResult = useMemo(
     () =>
@@ -195,8 +259,9 @@ const AutomationBuilder = () => {
         <ReactFlow
           nodes={nodesWithValidation}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
+          onNodeDragStart={onNodeDragStart}
           onConnect={onConnect}
           fitView
           className="overview"
@@ -206,6 +271,7 @@ const AutomationBuilder = () => {
           nodeTypes={nodeTypes}
         >
           <ValidationPanel result={validationResult} nodes={nodes} />
+          <UndoRedoPanel undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} />
           <CustomMinimapWithEdges />
           <Controls />
           <Background />
