@@ -98,6 +98,7 @@ const AutomationBuilder = () => {
     canRedo,
     pushStateBefore,
     markAction,
+    pushStateAfterDrag,
   } = useWorkflowHistory(nodes, setNodes, edges, setEdges);
 
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
@@ -231,8 +232,13 @@ const AutomationBuilder = () => {
 
   const onNodeDragStart = useCallback(() => {
     pushStateBefore(nodes, edges);
-    markAction();
-  }, [nodes, edges, pushStateBefore, markAction]);
+  }, [nodes, edges, pushStateBefore]);
+
+  const onNodeDragStop = useCallback(() => {
+    requestAnimationFrame(() => {
+      pushStateAfterDrag();
+    });
+  }, [pushStateAfterDrag]);
 
   const validationResult = useMemo(
     () =>
@@ -264,6 +270,7 @@ const AutomationBuilder = () => {
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
           onConnect={onConnect}
           fitView
           className="overview"

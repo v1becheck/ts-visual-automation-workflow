@@ -23,6 +23,8 @@ export type UseWorkflowHistoryResult = {
   pushStateBefore: (nodes: Node[], edges: Edge[]) => void;
   /** Call after applying an action so the next state update will be pushed (enables redo). */
   markAction: () => void;
+  /** Call when a drag ends to push the final state (so redo restores correct position). */
+  pushStateAfterDrag: () => void;
 };
 
 /**
@@ -41,7 +43,12 @@ export function useWorkflowHistory(
   const skipPushRef = useRef(false);
   const actionPendingRef = useRef(false);
   const initializedRef = useRef(false);
+  const latestRef = useRef<Snapshot>({ nodes: [], edges: [] });
   const [, setTick] = useState(0);
+
+  useEffect(() => {
+    latestRef.current = { nodes: [...nodes], edges: [...edges] };
+  }, [nodes, edges]);
 
   const pushState = useCallback((snapshot: Snapshot, atTip: boolean) => {
     const history = historyRef.current;
@@ -68,6 +75,12 @@ export function useWorkflowHistory(
   const markAction = useCallback(() => {
     actionPendingRef.current = true;
   }, []);
+
+  const pushStateAfterDrag = useCallback(() => {
+    const { nodes: n, edges: e } = latestRef.current;
+    pushState(cloneSnapshot(n, e), false);
+    setTick((t) => t + 1);
+  }, [pushState]);
 
   useEffect(() => {
     if (skipPushRef.current) {
@@ -109,7 +122,9 @@ export function useWorkflowHistory(
   }, [setNodes, setEdges]);
 
   const canUndo = indexRef.current > 0;
-  const canRedo = indexRef.current < historyRef.current.length;
+  const canRedo =
+    historyRef.current.length > 0 &&
+    indexRef.current < historyRef.current.length - 1;
 
   return {
     undo,
@@ -118,5 +133,6 @@ export function useWorkflowHistory(
     canRedo,
     pushStateBefore,
     markAction,
+    pushStateAfterDrag,
   };
 }
