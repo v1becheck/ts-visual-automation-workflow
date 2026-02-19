@@ -47,6 +47,16 @@ import ThemeToggle from "./ThemeToggle";
 import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
 import GoToNodePanel from "./GoToNodePanel";
 
+/** Returns an ID that does not exist in nodes (or in reserved). Use for new nodes so pasted/duplicated nodes never overwrite existing ones. */
+function getUniqueNodeId(nodes: Node[], reserved?: Set<string>): string {
+  const used = new Set(nodes.map((n) => n.id));
+  if (reserved) reserved.forEach((id) => used.add(id));
+  let n = 0;
+  while (used.has(`dndnode_${n}`)) n++;
+  return `dndnode_${n}`;
+}
+
+/** Legacy single-id getter; prefer getUniqueNodeId(nodes) when you have nodes to avoid collisions after load. */
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
@@ -367,7 +377,12 @@ const AutomationBuilder = () => {
     const clipboard = clipboardRef.current;
     if (!clipboard || clipboard.nodes.length === 0) return;
     const idMap = new Map<string, string>();
-    clipboard.nodes.forEach((n) => idMap.set(n.id, getId()));
+    const reserved = new Set<string>();
+    clipboard.nodes.forEach((n) => {
+      const newId = getUniqueNodeId(nodes, reserved);
+      idMap.set(n.id, newId);
+      reserved.add(newId);
+    });
     const targetFlow = screenToFlowPosition({
       x: lastMouseScreenRef.current.x,
       y: lastMouseScreenRef.current.y,
@@ -414,7 +429,12 @@ const AutomationBuilder = () => {
       (e) => selectedIds.has(e.source) && selectedIds.has(e.target)
     );
     const idMap = new Map<string, string>();
-    selectedNodes.forEach((n) => idMap.set(n.id, getId()));
+    const reserved = new Set<string>();
+    selectedNodes.forEach((n) => {
+      const newId = getUniqueNodeId(nodes, reserved);
+      idMap.set(n.id, newId);
+      reserved.add(newId);
+    });
     const newNodes: Node[] = selectedNodes.map((n) => ({
       ...n,
       id: idMap.get(n.id)!,
@@ -573,7 +593,7 @@ const AutomationBuilder = () => {
         x: event.clientX,
         y: event.clientY,
       });
-      const newId = getId();
+      const newId = getUniqueNodeId(nodes);
       const defaultLabel = `${type} node`;
       const newNode: Node = {
         id: newId,
