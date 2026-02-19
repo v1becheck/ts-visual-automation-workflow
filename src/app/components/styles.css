@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(2, 6, 23, 0.75);
+  background: var(--overlay-bg);
   backdrop-filter: blur(0);
   opacity: 0;
   transition: opacity 0.8s ease-in-out, backdrop-filter 0.9s ease-in-out;
@@ -33,7 +33,7 @@
   padding: 1.5rem;
   border-radius: 1rem;
   border: 1px solid var(--border-default);
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--card-bg);
   box-shadow: var(--shadow-glow);
   opacity: 0;
   transform: scale(0.96) translateY(10px);
@@ -74,7 +74,7 @@
   margin-bottom: 1.25rem;
   font-size: 0.9375rem;
   color: var(--slate-200);
-  background: rgba(2, 6, 23, 0.5);
+  background: var(--input-bg);
   border: 1px solid var(--border-default);
   border-radius: 0.5rem;
   outline: none;
@@ -275,6 +275,59 @@
   cursor: not-allowed;
 }
 
+/* ---- Theme toggle ---- */
+.theme-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 1.125rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-hover);
+  background: var(--slate-800);
+}
+
+[data-theme="light"] .theme-toggle:hover {
+  background: var(--slate-200);
+}
+
+.theme-toggle__icon {
+  position: absolute;
+}
+
+.theme-toggle__icon--moon {
+  display: none;
+}
+
+.theme-toggle__icon--sun {
+  display: inline;
+}
+
+[data-theme="light"] .theme-toggle__icon--sun {
+  display: none;
+}
+
+[data-theme="light"] .theme-toggle__icon--moon {
+  display: inline;
+}
+
+.automation-builder__top-right {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem;
+}
+
 /* ---- Workflow validation panel ---- */
 .validation-panel {
   margin: 0.75rem;
@@ -360,7 +413,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: rgba(2, 6, 23, 0.7);
+  background: var(--panel-bg);
   backdrop-filter: blur(12px);
   border-left: 1px solid var(--border-default);
   overflow: hidden;
@@ -936,4 +989,89 @@
 .overview .react-flow__node-output.selectable.selected,
 .overview .react-flow__node-output.selectable:focus {
   border-left-color: var(--emerald-400);
+}
+
+/* ---- Light theme panel/surface overrides ---- */
+[data-theme="light"] .validation-panel__content,
+[data-theme="light"] .validation-panel__content--invalid {
+  background: var(--card-bg);
+}
+
+[data-theme="light"] .undo-redo-panel__btn {
+  background: var(--card-bg);
+}
+
+[data-theme="light"] .undo-redo-panel__btn:hover:not(:disabled) {
+  background: var(--slate-200);
+}
+
+[data-theme="light"] .overview .react-flow__minimap,
+[data-theme="light"] .overview .automation-minimap {
+  background: var(--slate-100) !important;
+}
+
+[data-theme="light"] .overview .react-flow__minimap-mask {
+  fill: rgba(241, 245, 249, 0.8) !important;
+  stroke: var(--slate-400);
+}
+
+[data-theme="light"] .automation-builder .dndnode {
+  background: var(--slate-100);
+  color: var(--slate-700);
+}
+
+[data-theme="light"] .overview .react-flow__node-input,
+[data-theme="light"] .overview .react-flow__node-default,
+[data-theme="light"] .overview .react-flow__node-output {
+  background: var(--slate-100) !important;
+  color: var(--foreground);
+}
+
+/* Light mode: darker node labels on canvas (custom nodes) */
+[data-theme="light"] .overview .react-flow__node .email-node,
+[data-theme="light"] .overview .react-flow__node .webhook-node,
+[data-theme="light"] .overview .react-flow__node .delay-node,
+[data-theme="light"] .overview .react-flow__node .condition-node,
+[data-theme="light"] .overview .react-flow__node .http-node,
+[data-theme="light"] .overview .react-flow__node .schedule-node,
+[data-theme="light"] .overview .react-flow__node .set-node,
+[data-theme="light"] .overview .react-flow__node .merge-node,
+[data-theme="light"] .overview .react-flow__node .slack-node,
+[data-theme="light"] .overview .react-flow__node .code-node {
+  color: var(--foreground);
+}
+
+[data-theme="light"] .overview .react-flow__node .email-node strong,
+[data-theme="light"] .overview .react-flow__node .webhook-node strong,
+[data-theme="light"] .overview .react-flow__node .delay-node strong,
+[data-theme="light"] .overview .react-flow__node .condition-node strong,
+[data-theme="light"] .overview .react-flow__node .http-node strong,
+[data-theme="light"] .overview .react-flow__node .schedule-node strong,
+[data-theme="light"] .overview .react-flow__node .set-node strong,
+[data-theme="light"] .overview .react-flow__node .merge-node strong,
+[data-theme="light"] .overview .react-flow__node .slack-node strong,
+[data-theme="light"] .overview .react-flow__node .code-node strong {
+  color: var(--foreground);
+}
+
+[data-theme="light"] .overview .react-flow__node .node-subtitle {
+  color: var(--slate-600);
+}
+
+/* Light mode: lighter canvas and background */
+[data-theme="light"] .overview.react-flow {
+  --xy-background-color: #e2e8f0;
+  --xy-background-pattern-dots-color: rgba(148, 163, 184, 0.4);
+  --xy-background-pattern-lines-color: rgba(148, 163, 184, 0.35);
+  --xy-background-pattern-cross-color: rgba(148, 163, 184, 0.35);
+  --xy-node-color: var(--foreground);
+  background-color: #e2e8f0;
+}
+
+[data-theme="light"] .overview .react-flow__background {
+  background-color: #e2e8f0;
+}
+
+[data-theme="light"] .automation-builder .reactflow-wrapper {
+  background: var(--background);
 }

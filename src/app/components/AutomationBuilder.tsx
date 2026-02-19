@@ -9,6 +9,7 @@ import {
   Edge,
   NodeTypes,
   OnConnect,
+  Panel,
   ReactFlow,
   useEdgesState,
   useNodesState,
@@ -36,6 +37,7 @@ import MergeNode from "./nodes/MergeNode";
 import SlackNode from "./nodes/SlackNode";
 import CodeNode from "./nodes/CodeNode";
 import CustomMinimapWithEdges from "./CustomMinimapWithEdges";
+import ThemeToggle from "./ThemeToggle";
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -270,6 +272,9 @@ const AutomationBuilder = () => {
           onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
         >
+          <Panel position="top-right" className="automation-builder__top-right">
+            <ThemeToggle />
+          </Panel>
           <ValidationPanel result={validationResult} nodes={nodes} />
           <UndoRedoPanel undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} />
           <CustomMinimapWithEdges />
