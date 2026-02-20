@@ -89,7 +89,18 @@ Tests live in `src/__tests__/`. Run them with:
 npm test
 ```
 
-Coverage includes at least the main page render. With more time: unit tests for workflow validation and export/import parsing; integration tests for the CRUD API (e.g. create workflow, GET by id, update, delete); and E2E for core flows (add node, connect, edit, persist).
+**What’s covered:**
+
+- **Page smoke:** Home page renders; after initial load, “Go to node” and “Run simulation” are present (`page.test.tsx`).
+- **Workflow validation:** `validateWorkflow` – empty graph, linear/diamond DAGs, cycles (self-loop, 2-node, 3-node), orphaned nodes (`workflowValidation.test.ts`).
+- **Export/import:** `exportWorkflow` and `parseWorkflowFile` – JSON shape, valid/invalid JSON, missing or invalid nodes/edges (`workflowExport.test.ts`).
+- **Simulation:** `runSimulation` – empty/single node, linear flow, parallel steps, cycle detection, edge normalization (`runSimulation.test.ts`).
+
+**Testing strategy with more time:**
+
+- **API integration:** Mock Mongoose (or use a test DB) and test CRUD handlers: GET/POST `/api/automations`, GET/PUT/DELETE `/api/automations/:id` (status codes, response shape, 400 for invalid id, 503 when DB unavailable).
+- **E2E:** Playwright/Cypress for critical paths: add node, connect, edit label, save, reload.
+- **Components:** Focused tests for RunSimulationPanel, ValidationPanel, or modals with user-event and mocked callbacks.
 
 ## What I’d Improve With More Time
 
