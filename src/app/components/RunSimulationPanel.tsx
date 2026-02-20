@@ -41,6 +41,10 @@ export default function RunSimulationPanel({
   }, [result]);
 
   const handleRun = useCallback(() => {
+    if (result !== null) {
+      setResult(null);
+      return;
+    }
     const sim = runSimulation(
       nodes.map((n) => ({ id: n.id })),
       edges.map((e) => ({ source: e.source, target: e.target }))
@@ -49,7 +53,7 @@ export default function RunSimulationPanel({
     if (sim.success && sim.order.length > 0 && onHighlightNodes) {
       onHighlightNodes(sim.order);
     }
-  }, [nodes, edges, onHighlightNodes]);
+  }, [nodes, edges, onHighlightNodes, result]);
 
   const content = (
     <div ref={panelRef} className="run-simulation-panel">

@@ -43,7 +43,10 @@ export default function EdgeEditModal({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      // Only close when keydown is outside the modal (e.g. overlay), not on keyup
+      const target = e.target instanceof Node ? e.target : null;
+      if (dialogRef.current && target && !dialogRef.current.contains(target)) onClose();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -58,14 +61,14 @@ export default function EdgeEditModal({
     onClose();
   };
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  const handleOverlayMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
 
   return (
     <div
       className={`node-edit-modal-overlay ${isOpen ? "node-edit-modal-overlay--open" : "node-edit-modal-overlay--closing"}`}
-      onClick={handleOverlayClick}
+      onMouseDown={handleOverlayMouseDown}
       role="dialog"
       aria-modal="true"
       aria-labelledby="edge-edit-modal-title"

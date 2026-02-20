@@ -80,6 +80,7 @@ export default function NodeEditModal({
       if (!isOpen) return;
       if (e.key === "Escape") onClose();
     };
+    // Close on keydown only (not keyup)
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen, onClose]);
@@ -95,14 +96,14 @@ export default function NodeEditModal({
     }
   };
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  const handleOverlayMouseDown = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
 
   return (
     <div
       className={`node-edit-modal-overlay ${isOpen ? "node-edit-modal-overlay--open" : "node-edit-modal-overlay--closing"}`}
-      onClick={handleOverlayClick}
+      onMouseDown={handleOverlayMouseDown}
       role="dialog"
       aria-modal="true"
       aria-labelledby="node-edit-modal-title"
