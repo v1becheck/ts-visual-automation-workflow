@@ -47,6 +47,7 @@ export default function GoToNodePanel({ nodes, setNodes, embedded }: Props) {
       setQuery("");
       setIsOpen(false);
       setFocusedIndex(0);
+      inputRef.current?.blur();
     },
     [setCenter, setNodes]
   );
