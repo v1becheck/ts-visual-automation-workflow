@@ -13,7 +13,7 @@ const SHORTCUTS: { action: string; keys: string }[] = [
   { action: "Move canvas (pan)", keys: "Hold Space + left mouse drag" },
   { action: "Delete node or connection", keys: "Ctrl+Click, Delete or Backspace" },
   { action: "Close modal / Deselect all", keys: "Escape" },
-  { action: "Edit selected node", keys: "Enter" },
+  { action: "Edit selected node", keys: "Double-click node or select node + Enter" },
   { action: "Edit edge label", keys: "Double-click edge or select edge + Enter" },
   { action: "Fit view", keys: "Ctrl+0" },
   { action: "Open this shortcuts help", keys: "Ctrl+/" },
