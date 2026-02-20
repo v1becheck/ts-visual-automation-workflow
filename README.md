@@ -23,13 +23,12 @@ The app lets you build automation workflows by dragging nodes onto a canvas and 
 
 ### Prerequisites
 
-- Node.js 22 (use `nvm use`)
+- Node.js 22
 - **MongoDB** (optional for persistence): local instance or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account
 
 ### Installation & Setup
 
 ```bash
-nvm use
 npm i
 cp .env.example .env
 # Edit .env and set MONGODB_URI (see below). If unset, the app runs with in-memory default workflow (no persistence).
