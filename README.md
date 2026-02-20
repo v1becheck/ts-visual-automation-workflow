@@ -110,10 +110,8 @@ npm test
 4. **Error feedback** – Toasts or inline messages for save/load failures instead of only console.
 5. **Workflow-runner service** - queue (BullMQ / SQS) and execution logs
 
-## Challenge Requirements (Reference)
+## License
 
-- **Frontend:** Node creation & editing modal; UI/UX improvements.
-- **Backend:** Database + schema; CRUD API for workflows (`POST/GET/PUT/DELETE /api/automations`).
-- **Bonus:** Extra node types, validation, undo/redo, templates, export/import, dark mode, shortcuts — as implemented.
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
 
-See `README_CHALLENGE.md` for the full challenge brief.
+

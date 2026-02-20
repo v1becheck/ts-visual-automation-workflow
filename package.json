@@ -1,7 +1,11 @@
 {
-  "name": "fe-coding-challenge",
-  "version": "0.1.1",
+  "name": "ts-visual-automation-workflow",
+  "version": "0.9.1",
   "private": true,
+  "author": "Miloš Ilić",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
