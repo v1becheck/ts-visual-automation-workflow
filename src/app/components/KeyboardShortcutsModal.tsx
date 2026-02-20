@@ -15,6 +15,7 @@ const SHORTCUTS: { action: string; keys: string }[] = [
   { action: "Close modal / Deselect all", keys: "Escape" },
   { action: "Edit selected node", keys: "Enter" },
   { action: "Edit edge label", keys: "Double-click edge or select edge + Enter" },
+  { action: "Fit view", keys: "Ctrl+0" },
   { action: "Open this shortcuts help", keys: "Ctrl+/" },
 ];
 

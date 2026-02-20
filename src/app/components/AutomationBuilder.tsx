@@ -104,7 +104,7 @@ function getNodeType(node: Node): NodeTypeOption {
 const AutomationBuilder = () => {
   const reactFlowWrapper = useRef(null);
 
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
   const { type } = useDnD();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -543,11 +543,17 @@ const AutomationBuilder = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === "/") {
         e.preventDefault();
         setShortcutsModalOpen((open) => !open);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+        e.preventDefault();
+        fitView({ duration: 300 });
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
+    fitView,
     undo,
     redo,
     workflowId,
