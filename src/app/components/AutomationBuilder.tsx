@@ -798,7 +798,7 @@ const AutomationBuilder = () => {
           elementsSelectable
           selectionOnDrag
           selectionKeyCode="Shift"
-          multiSelectionKeyCode={["Shift", "Control", "Meta"]}
+          multiSelectionKeyCode="Shift"
           panOnDrag={[1, 2]}
           panActivationKeyCode="Space"
         >
