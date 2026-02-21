@@ -99,8 +99,8 @@ const Sidebar = ({
   return (
     <aside className="sidebar">
       <header className="sidebar-header">
-        <h2 className="sidebar-title">Nodes</h2>
-        <p className="sidebar-subtitle">Drag onto canvas</p>
+        <h2 className="sidebar-title">Workflow builder</h2>
+        <p className="sidebar-subtitle">Build automation flows with nodes and connections</p>
       </header>
       <div className="sidebar-content">
         {(onNewWorkflow ?? onSelectWorkflow) && (
@@ -240,6 +240,10 @@ const Sidebar = ({
             </ul>
           </section>
         )}
+        <div className="sidebar-nodes-intro">
+          <h3 className="sidebar-nodes-intro__title">Nodes</h3>
+          <p className="sidebar-nodes-intro__subtitle">Drag onto canvas</p>
+        </div>
         {SIDEBAR_SECTIONS.map((section) => (
           <section key={section.label} className="sidebar-section">
             <h3 className="sidebar-section-title">{section.label}</h3>
