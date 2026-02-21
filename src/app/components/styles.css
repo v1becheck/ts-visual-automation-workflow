@@ -1488,7 +1488,10 @@
   border-left-color: var(--rose-400);
 }
 
+/* Promote to own compositor layer to avoid one-frame paint glitch on first drag (state re-render) */
 .code-node {
+  isolation: isolate;
+  transform: translateZ(0);
   border-left: 4px solid var(--slate-500);
 }
 
@@ -1612,10 +1615,10 @@
   stroke-width: 1;
 }
 
-/* Drag crosshair overlay (vertical + horizontal lines from node center) */
+/* Drag crosshair: behind nodes so vertical line doesn't draw on top and cause glitches */
 .overview .alignment-guides-panel {
   margin: 0 !important;
-  z-index: 10;
+  z-index: 0;
 }
 
 
