@@ -63,6 +63,7 @@ function getUniqueNodeId(nodes: Node[], reserved?: Set<string>): string {
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
+/** Custom nodes are all wrapped in React.memo to avoid re-renders when only other nodes or drag state change. */
 const nodeTypes: NodeTypes = {
   email: EmailNode,
   webhook: WebhookNode,
@@ -78,6 +79,10 @@ const nodeTypes: NodeTypes = {
 
 const DEFAULT_NODE_WIDTH = 140;
 const DEFAULT_NODE_HEIGHT = 50;
+
+/** When "true" in localStorage, throttle drag state updates to ~30fps to reduce CPU on low-end devices. */
+const DRAG_THROTTLE_30FPS_KEY = "workflow-builder-drag-30fps";
+const DRAG_THROTTLE_MS = 33;
 
 function getNodeDimensions(
   node: Node,
@@ -164,6 +169,7 @@ const AutomationBuilder = () => {
     position: { x: number; y: number };
   } | null>(null);
   const dragStateRafRef = useRef<number | null>(null);
+  const lastDragStateUpdateRef = useRef(0);
   const SAVE_DEBOUNCE_MS = 1500;
 
   const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
@@ -777,7 +783,15 @@ const AutomationBuilder = () => {
         dragStateRafRef.current = requestAnimationFrame(() => {
           dragStateRafRef.current = null;
           const pending = dragStatePendingRef.current;
-          if (pending != null) setDragState(pending);
+          if (pending == null) return;
+          const throttle30 =
+            typeof window !== "undefined" && localStorage.getItem(DRAG_THROTTLE_30FPS_KEY) === "true";
+          if (throttle30) {
+            const now = Date.now();
+            if (now - lastDragStateUpdateRef.current < DRAG_THROTTLE_MS) return;
+            lastDragStateUpdateRef.current = now;
+          }
+          setDragState(pending);
         });
       }
     },
@@ -790,6 +804,7 @@ const AutomationBuilder = () => {
       dragStateRafRef.current = null;
     }
     dragStatePendingRef.current = null;
+    lastDragStateUpdateRef.current = 0;
     setDragState(null);
     requestAnimationFrame(() => {
       pushStateAfterDrag();

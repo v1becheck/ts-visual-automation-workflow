@@ -75,6 +75,8 @@ On load, the builder fetches the workflow list (**GET /api/automations**) and lo
 
 **Shortcuts (Ctrl+/ in-app):** Undo/Redo (Ctrl+Z / Ctrl+Shift+Z), Save (Ctrl+S), Copy/Paste/Duplicate (Ctrl+C / Ctrl+V / Ctrl+D), multi-select (Shift+drag, Ctrl+click), pan (Space + drag), Go to node (search at top), edit node/edge (Enter when selected), delete (Ctrl+Click or Delete/Backspace).
 
+**Performance (optional):** On low-end devices, drag can feel heavy. Custom node components are wrapped in `React.memo` to limit re-renders. You can optionally throttle drag updates to ~30fps by setting in the browser console: `localStorage.setItem('workflow-builder-drag-30fps', 'true')`. Clear with `localStorage.removeItem('workflow-builder-drag-30fps')`.
+
 ### Trade-offs
 
 - **No auth** – The API is open; fine for a demo/portfolio, but production would need authentication and per-user or per-tenant workflows.
