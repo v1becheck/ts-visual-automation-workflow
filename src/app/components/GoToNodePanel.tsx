@@ -103,7 +103,7 @@ export default function GoToNodePanel({ nodes, setNodes, embedded }: Props) {
   const content = (
     <div className="go-to-node-panel__wrap">
         <label htmlFor="go-to-node-input" className="go-to-node-panel__label">
-          Go to node
+          Go to node:
         </label>
         <input
           id="go-to-node-input"
