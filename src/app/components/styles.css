@@ -631,8 +631,19 @@
 
 .automation-builder__top-right {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 0.5rem;
   margin: 0.75rem;
+}
+.automation-builder__top-right-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+.drag-position-text {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--slate-400);
 }
 
 /* ---- Workflow validation panel ---- */
@@ -1600,6 +1611,13 @@
   stroke: var(--slate-600);
   stroke-width: 1;
 }
+
+/* Drag crosshair overlay (vertical + horizontal lines from node center) */
+.overview .alignment-guides-panel {
+  margin: 0 !important;
+  z-index: 10;
+}
+
 
 .overview .react-flow__controls button {
   background: var(--slate-900) !important;

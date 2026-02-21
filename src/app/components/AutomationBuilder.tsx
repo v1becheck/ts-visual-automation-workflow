@@ -14,6 +14,7 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
+  useStoreApi,
 } from "@xyflow/react";
 
 import Sidebar, { type WorkflowListItem } from "./Sidebar";
@@ -47,6 +48,7 @@ import CustomMinimapWithEdges from "./CustomMinimapWithEdges";
 import ThemeToggle from "./ThemeToggle";
 import KeyboardShortcutsModal from "./KeyboardShortcutsModal";
 import GoToNodePanel from "./GoToNodePanel";
+import AlignmentGuides from "./AlignmentGuides";
 
 /** Returns an ID that does not exist in nodes (or in reserved). Use for new nodes so pasted/duplicated nodes never overwrite existing ones. */
 function getUniqueNodeId(nodes: Node[], reserved?: Set<string>): string {
@@ -73,6 +75,20 @@ const nodeTypes: NodeTypes = {
   slack: SlackNode,
   code: CodeNode,
 };
+
+const DEFAULT_NODE_WIDTH = 140;
+const DEFAULT_NODE_HEIGHT = 50;
+
+function getNodeDimensions(
+  node: Node,
+  nodeLookup?: Map<string, { internals?: { measured?: { width?: number; height?: number } } }>
+): { width: number; height: number } {
+  const entry = nodeLookup?.get(node.id);
+  const m = entry?.internals?.measured;
+  const w = m?.width ?? (node as Node & { width?: number }).width ?? DEFAULT_NODE_WIDTH;
+  const h = m?.height ?? (node as Node & { height?: number }).height ?? DEFAULT_NODE_HEIGHT;
+  return { width: w, height: h };
+}
 
 /** All nodes have at least data.label for the edit modal */
 function getNodeLabel(node: Node): string {
@@ -109,6 +125,12 @@ const AutomationBuilder = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const storeApi = useStoreApi();
+  const [dragState, setDragState] = useState<{
+    centerX: number;
+    centerY: number;
+    position: { x: number; y: number };
+  } | null>(null);
 
   const {
     undo,
@@ -136,6 +158,12 @@ const AutomationBuilder = () => {
   const skipDirtyRef = useRef(false);
   const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
   const lastMouseScreenRef = useRef({ x: 0, y: 0 });
+  const dragStatePendingRef = useRef<{
+    centerX: number;
+    centerY: number;
+    position: { x: number; y: number };
+  } | null>(null);
+  const dragStateRafRef = useRef<number | null>(null);
   const SAVE_DEBOUNCE_MS = 1500;
 
   const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
@@ -737,7 +765,32 @@ const AutomationBuilder = () => {
     pushStateBefore(nodes, edges);
   }, [nodes, edges, pushStateBefore]);
 
+  const onNodeDrag = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      const state = storeApi.getState();
+      const nodeLookup = state.nodeLookup as Parameters<typeof getNodeDimensions>[1];
+      const dims = getNodeDimensions(node, nodeLookup);
+      const centerX = node.position.x + dims.width / 2;
+      const centerY = node.position.y + dims.height / 2;
+      dragStatePendingRef.current = { centerX, centerY, position: { ...node.position } };
+      if (dragStateRafRef.current === null) {
+        dragStateRafRef.current = requestAnimationFrame(() => {
+          dragStateRafRef.current = null;
+          const pending = dragStatePendingRef.current;
+          if (pending != null) setDragState(pending);
+        });
+      }
+    },
+    [storeApi]
+  );
+
   const onNodeDragStop = useCallback(() => {
+    if (dragStateRafRef.current !== null) {
+      cancelAnimationFrame(dragStateRafRef.current);
+      dragStateRafRef.current = null;
+    }
+    dragStatePendingRef.current = null;
+    setDragState(null);
     requestAnimationFrame(() => {
       pushStateAfterDrag();
     });
@@ -784,6 +837,7 @@ const AutomationBuilder = () => {
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onNodeDragStart={onNodeDragStart}
+          onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
           onConnect={onConnect}
           fitView
@@ -813,16 +867,23 @@ const AutomationBuilder = () => {
             <GoToNodePanel nodes={nodes} setNodes={setNodes} embedded />
           </Panel>
           <Panel position="top-right" className="automation-builder__top-right">
-            <button
-              type="button"
-              className="shortcuts-help-btn"
-              onClick={() => setShortcutsModalOpen(true)}
-              title="Keyboard shortcuts (Ctrl+/)"
-              aria-label="Show keyboard shortcuts"
-            >
-              ?
-            </button>
-            <ThemeToggle />
+            <div className="automation-builder__top-right-buttons">
+              <button
+                type="button"
+                className="shortcuts-help-btn"
+                onClick={() => setShortcutsModalOpen(true)}
+                title="Keyboard shortcuts (Ctrl+/)"
+                aria-label="Show keyboard shortcuts"
+              >
+                ?
+              </button>
+              <ThemeToggle />
+            </div>
+            {dragState != null && (
+              <span className="drag-position-text" aria-live="polite">
+                X: {Math.round(dragState.position.x)} &nbsp; Y: {Math.round(dragState.position.y)}
+              </span>
+            )}
           </Panel>
           <Panel position="top-left" className="top-left-panel">
             <div className="top-left-panel__column">
@@ -866,6 +927,7 @@ const AutomationBuilder = () => {
           <CustomMinimapWithEdges />
           <Controls />
           <Background />
+          <AlignmentGuides drag={dragState ? { centerX: dragState.centerX, centerY: dragState.centerY } : null} />
         </ReactFlow>
       </div>
       <Sidebar
