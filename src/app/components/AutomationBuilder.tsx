@@ -796,10 +796,10 @@ const AutomationBuilder = () => {
           onEdgeDoubleClick={onEdgeDoubleClick}
           nodeTypes={nodeTypes}
           elementsSelectable
-          selectionOnDrag
+          selectionOnDrag={false}
           selectionKeyCode="Shift"
           multiSelectionKeyCode="Shift"
-          panOnDrag={[1, 2]}
+          panOnDrag={true}
           panActivationKeyCode="Space"
         >
           <Panel position="top-center" className="top-center-stack">

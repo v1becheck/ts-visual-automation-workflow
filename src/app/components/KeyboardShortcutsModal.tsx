@@ -10,7 +10,7 @@ const SHORTCUTS: { action: string; keys: string }[] = [
   { action: "Paste nodes", keys: "Ctrl+V" },
   { action: "Duplicate selected nodes", keys: "Ctrl+D" },
   { action: "Select multiple", keys: "Shift+drag (box), Shift+click (add)" },
-  { action: "Move canvas (pan)", keys: "Hold Space + left mouse drag" },
+  { action: "Move canvas (pan)", keys: "Left mouse drag" },
   { action: "Delete node or connection", keys: "Ctrl+Click, Delete or Backspace" },
   { action: "Close modal / Deselect all", keys: "Escape" },
   { action: "Edit selected node", keys: "Double-click node or select node + Enter" },
