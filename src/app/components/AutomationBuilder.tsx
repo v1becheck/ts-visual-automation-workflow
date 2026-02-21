@@ -87,12 +87,13 @@ const DRAG_THROTTLE_MS = 33;
 /** When "false" in localStorage, crosshair lines are hidden when dragging a node. Default true. */
 const CROSSHAIR_ENABLED_KEY = "workflow-builder-crosshair-enabled";
 
+/** Internal node has measured at top level; fall back to internals.measured then node.width/height */
 function getNodeDimensions(
   node: Node,
-  nodeLookup?: Map<string, { internals?: { measured?: { width?: number; height?: number } } }>
+  nodeLookup?: Map<string, { measured?: { width?: number; height?: number }; internals?: { measured?: { width?: number; height?: number } } }>
 ): { width: number; height: number } {
   const entry = nodeLookup?.get(node.id);
-  const m = entry?.internals?.measured;
+  const m = entry?.measured ?? entry?.internals?.measured;
   const w = m?.width ?? (node as Node & { width?: number }).width ?? DEFAULT_NODE_WIDTH;
   const h = m?.height ?? (node as Node & { height?: number }).height ?? DEFAULT_NODE_HEIGHT;
   return { width: w, height: h };
@@ -784,8 +785,14 @@ const AutomationBuilder = () => {
       const state = storeApi.getState();
       const nodeLookup = state.nodeLookup as Parameters<typeof getNodeDimensions>[1];
       const dims = getNodeDimensions(node, nodeLookup);
-      const centerX = node.position.x + dims.width / 2;
-      const centerY = node.position.y + dims.height / 2;
+      const internal = state.nodeLookup.get(node.id) as
+        | { internals?: { positionAbsolute?: { x: number; y: number } } }
+        | undefined;
+      const posAbsolute = internal?.internals?.positionAbsolute;
+      const topLeftX = posAbsolute != null ? posAbsolute.x : node.position.x;
+      const topLeftY = posAbsolute != null ? posAbsolute.y : node.position.y;
+      const centerX = topLeftX + dims.width / 2;
+      const centerY = topLeftY + dims.height / 2;
       dragStatePendingRef.current = { centerX, centerY, position: { ...node.position } };
       if (dragStateRafRef.current === null) {
         dragStateRafRef.current = requestAnimationFrame(() => {

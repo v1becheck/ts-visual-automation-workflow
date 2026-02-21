@@ -21,23 +21,26 @@ function flowToScreen(flowX: number, flowY: number, tx: number, ty: number, zoom
   return { x: flowX * zoom + tx, y: flowY * zoom + ty };
 }
 
+/** Use positionAbsolute when available so rect matches where React Flow actually renders the node (and handles). */
 function getNodeScreenRect(
   node: Node,
   tx: number,
   ty: number,
   zoom: number,
-  nodeLookup?: Map<string, { internals?: { measured?: { width?: number; height?: number } } }>
+  nodeLookup?: Map<string, {
+    measured?: { width?: number; height?: number };
+    internals?: { positionAbsolute?: { x: number; y: number }; measured?: { width?: number; height?: number } };
+  }>
 ) {
-  const w =
-    nodeLookup?.get(node.id)?.internals?.measured?.width ??
-    (node as Node & { width?: number }).width ??
-    DEFAULT_NODE_WIDTH;
-  const h =
-    nodeLookup?.get(node.id)?.internals?.measured?.height ??
-    (node as Node & { height?: number }).height ??
-    DEFAULT_NODE_HEIGHT;
-  const left = flowToScreen(node.position.x, 0, tx, ty, zoom).x;
-  const top = flowToScreen(0, node.position.y, tx, ty, zoom).y;
+  const internal = nodeLookup?.get(node.id);
+  const m = internal?.measured ?? internal?.internals?.measured;
+  const w = m?.width ?? (node as Node & { width?: number }).width ?? DEFAULT_NODE_WIDTH;
+  const h = m?.height ?? (node as Node & { height?: number }).height ?? DEFAULT_NODE_HEIGHT;
+  const posAbsolute = internal?.internals?.positionAbsolute;
+  const flowX = posAbsolute != null ? posAbsolute.x : node.position.x;
+  const flowY = posAbsolute != null ? posAbsolute.y : node.position.y;
+  const left = flowToScreen(flowX, 0, tx, ty, zoom).x;
+  const top = flowToScreen(0, flowY, tx, ty, zoom).y;
   return { left, top, right: left + w * zoom, bottom: top + h * zoom };
 }
 
@@ -45,7 +48,7 @@ function getNodeScreenRect(
 function verticalSegments(
   x: number,
   nodes: Node[],
-  nodeLookup: Map<string, { internals?: { measured?: { width?: number; height?: number } } }> | undefined,
+  nodeLookup: Map<string, { measured?: { width?: number; height?: number }; internals?: { positionAbsolute?: { x: number; y: number }; measured?: { width?: number; height?: number } } }> | undefined,
   tx: number,
   ty: number,
   zoom: number,
@@ -78,7 +81,7 @@ function verticalSegments(
 function horizontalSegments(
   y: number,
   nodes: Node[],
-  nodeLookup: Map<string, { internals?: { measured?: { width?: number; height?: number } } }> | undefined,
+  nodeLookup: Map<string, { measured?: { width?: number; height?: number }; internals?: { positionAbsolute?: { x: number; y: number }; measured?: { width?: number; height?: number } } }> | undefined,
   tx: number,
   ty: number,
   zoom: number,
@@ -115,7 +118,10 @@ export default function AlignmentGuides({ drag }: Props) {
         width: s.width,
         height: s.height,
         nodes: s.nodes,
-        nodeLookup: s.nodeLookup as Map<string, { internals?: { measured?: { width?: number; height?: number } } }>,
+        nodeLookup: s.nodeLookup as Map<string, {
+          measured?: { width?: number; height?: number };
+          internals?: { positionAbsolute?: { x: number; y: number }; measured?: { width?: number; height?: number } };
+        }>,
       }),
       []
     )
