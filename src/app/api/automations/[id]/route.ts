@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const doc = await Automation.findByIdAndUpdate(
       id,
       { $set: update },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     ).lean();
     if (!doc) {
       return Response.json({ error: "Workflow not found" }, { status: 404 });
