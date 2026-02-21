@@ -12,11 +12,13 @@ type Props = {
   nodes: Node[];
   edges: Edge[];
   onImport: (nodes: Node[], edges: Edge[]) => void;
+  /** Export current workflow view as PNG. Fits view to nodes first. */
+  onExportPng?: () => void | Promise<void>;
   /** When true, render only the content (no Panel). Use inside a shared Panel. */
   embedded?: boolean;
 };
 
-export default function ExportImportPanel({ nodes, edges, onImport, embedded }: Props) {
+export default function ExportImportPanel({ nodes, edges, onImport, onExportPng, embedded }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -81,6 +83,17 @@ export default function ExportImportPanel({ nodes, edges, onImport, embedded }: 
         >
           Import
         </button>
+        {onExportPng && (
+          <button
+            type="button"
+            className="export-import-panel__btn"
+            onClick={() => void onExportPng()}
+            title="Export workflow as PNG image (fits view to nodes)"
+            aria-label="Export workflow as PNG"
+          >
+            Export PNG
+          </button>
+        )}
       </div>
     </>
   );

@@ -16,6 +16,11 @@ import {
   useReactFlow,
   useStoreApi,
 } from "@xyflow/react";
+import {
+  getBezierPath,
+  getEdgePosition,
+  ConnectionMode,
+} from "@xyflow/system";
 
 import Sidebar, { type WorkflowListItem } from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
@@ -127,7 +132,7 @@ function getNodeType(node: Node): NodeTypeOption {
 }
 
 const AutomationBuilder = () => {
-  const reactFlowWrapper = useRef(null);
+  const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
 
   const { screenToFlowPosition, fitView } = useReactFlow();
   const { type } = useDnD();
@@ -398,6 +403,146 @@ const AutomationBuilder = () => {
     },
     [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
   );
+
+  const exportWorkflowPng = useCallback(async () => {
+    const wrapper = reactFlowWrapper.current;
+    if (!wrapper) return;
+    const flowRoot = wrapper.querySelector(".react-flow");
+    const pane = wrapper.querySelector(".react-flow__pane");
+    if (!flowRoot || !pane || !(pane instanceof HTMLElement)) return;
+    try {
+      await fitView({ padding: 0.2, duration: 0 });
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const state = storeApi.getState();
+      const { transform, nodeLookup, connectionMode } = state;
+      const [vx, vy, zoom] = transform;
+      const isLight =
+        document.documentElement.getAttribute("data-theme") === "light";
+      const rootStyle = getComputedStyle(document.documentElement);
+      const flowStyle = getComputedStyle(flowRoot as HTMLElement);
+      const bg =
+        flowStyle.getPropertyValue("--xy-background-color")?.trim() ||
+        (isLight ? "#e2e8f0" : "#0f172a");
+      const edgeStroke =
+        rootStyle.getPropertyValue("--slate-400")?.trim() ||
+        (isLight ? "#64748b" : "rgba(148, 163, 184, 0.5)");
+      const labelColor =
+        rootStyle.getPropertyValue("--slate-200")?.trim() ||
+        (isLight ? "#334155" : "#e2e8f0");
+      const labelBg =
+        rootStyle.getPropertyValue("--slate-900")?.trim() ||
+        (isLight ? "#f1f5f9" : "#0f172a");
+      const labelStroke =
+        rootStyle.getPropertyValue("--slate-600")?.trim() ||
+        (isLight ? "#475569" : "#475569");
+      const paneRect = pane.getBoundingClientRect();
+      const pr = 2;
+      const cw = Math.round(paneRect.width * pr);
+      const ch = Math.round(paneRect.height * pr);
+
+      const { toSvg } = await import("html-to-image");
+      const svgDataUrl = await toSvg(pane, {
+        pixelRatio: pr,
+        backgroundColor: bg,
+        cacheBust: true,
+      });
+      const nodesImg = new Image();
+      await new Promise<void>((resolve, reject) => {
+        nodesImg.onload = () => resolve();
+        nodesImg.onerror = () => reject(new Error("Failed to load pane SVG"));
+        nodesImg.src = svgDataUrl;
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas 2d not available");
+      ctx.drawImage(nodesImg, 0, 0, cw, ch);
+
+      ctx.save();
+      ctx.translate(vx * pr, vy * pr);
+      ctx.scale(zoom * pr, zoom * pr);
+      const scale = zoom * pr;
+      const edgeStrokeWidth = 2 / scale;
+      const arrowSize = 8 / scale;
+      const labelFont = "500 12px system-ui, sans-serif";
+
+      for (const edge of edges) {
+        const sourceNode = nodeLookup.get(edge.source);
+        const targetNode = nodeLookup.get(edge.target);
+        if (!sourceNode || !targetNode) continue;
+        const pos = getEdgePosition({
+          id: edge.id,
+          sourceNode,
+          targetNode,
+          sourceHandle: edge.sourceHandle ?? null,
+          targetHandle: edge.targetHandle ?? null,
+          connectionMode: connectionMode ?? ConnectionMode.Strict,
+        });
+        if (!pos) continue;
+        const [pathStr, labelX, labelY] = getBezierPath({
+          sourceX: pos.sourceX,
+          sourceY: pos.sourceY,
+          sourcePosition: pos.sourcePosition,
+          targetX: pos.targetX,
+          targetY: pos.targetY,
+          targetPosition: pos.targetPosition,
+        });
+        const path = new Path2D(pathStr);
+        ctx.strokeStyle = edgeStroke;
+        ctx.lineWidth = edgeStrokeWidth;
+        ctx.stroke(path);
+
+        const dx = pos.targetX - labelX;
+        const dy = pos.targetY - labelY;
+        const angle = Math.atan2(dy, dx);
+        ctx.save();
+        ctx.translate(pos.targetX, pos.targetY);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(arrowSize, -arrowSize / 2);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(arrowSize, arrowSize / 2);
+        ctx.closePath();
+        ctx.fillStyle = edgeStroke;
+        ctx.fill();
+        ctx.restore();
+
+        const label = (edge as Edge & { label?: string }).label;
+        if (label && typeof label === "string") {
+          ctx.font = labelFont;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const metrics = ctx.measureText(label);
+          const pad = 4;
+          const minLabelW = 40;
+          const lw = Math.max(minLabelW, metrics.width + pad * 2);
+          const lh = 14;
+          const lx = labelX - lw / 2;
+          const ly = labelY - lh / 2;
+          ctx.fillStyle = labelBg;
+          ctx.fillRect(lx, ly, lw, lh);
+          ctx.strokeStyle = labelStroke;
+          ctx.lineWidth = 1 / scale;
+          ctx.strokeRect(lx, ly, lw, lh);
+          ctx.fillStyle = labelColor;
+          ctx.fillText(label, labelX, labelY);
+        }
+      }
+
+      ctx.restore();
+
+      const dataUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = "workflow.png";
+      a.click();
+    } catch (err) {
+      console.error("Export PNG failed:", err);
+      window.alert("Failed to export PNG.");
+    }
+  }, [fitView, storeApi, edges]);
 
   const deselectAll = useCallback(() => {
     setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
@@ -970,6 +1115,7 @@ const AutomationBuilder = () => {
                 nodes={nodes}
                 edges={edges}
                 onImport={handleImport}
+                onExportPng={exportWorkflowPng}
                 embedded
               />
               <ValidationPanel result={validationResult} nodes={nodes} embedded />
