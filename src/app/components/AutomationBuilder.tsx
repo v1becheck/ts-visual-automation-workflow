@@ -445,6 +445,12 @@ const AutomationBuilder = () => {
         pixelRatio: pr,
         backgroundColor: bg,
         cacheBust: true,
+        filter: (node: HTMLElement) => {
+          const c = node.classList;
+          if (!c) return true;
+          if (c.contains("react-flow__edges")) return false;
+          return true;
+        },
       });
       const nodesImg = new Image();
       await new Promise<void>((resolve, reject) => {
@@ -515,17 +521,42 @@ const AutomationBuilder = () => {
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           const metrics = ctx.measureText(label);
-          const pad = 4;
+          const pad = 6;
           const minLabelW = 40;
           const lw = Math.max(minLabelW, metrics.width + pad * 2);
-          const lh = 14;
+          const lh = 16;
+          const radius = 6;
           const lx = labelX - lw / 2;
           const ly = labelY - lh / 2;
+          const r = Math.min(radius, lw / 2, lh / 2);
+          ctx.beginPath();
+          if (typeof ctx.roundRect === "function") {
+            ctx.roundRect(lx, ly, lw, lh, r);
+          } else {
+            ctx.moveTo(lx + r, ly);
+            ctx.lineTo(lx + lw - r, ly);
+            ctx.quadraticCurveTo(lx + lw, ly, lx + lw, ly + r);
+            ctx.lineTo(lx + lw, ly + lh - r);
+            ctx.quadraticCurveTo(lx + lw, ly + lh, lx + lw - r, ly + lh);
+            ctx.lineTo(lx + r, ly + lh);
+            ctx.quadraticCurveTo(lx, ly + lh, lx, ly + lh - r);
+            ctx.lineTo(lx, ly + r);
+            ctx.quadraticCurveTo(lx, ly, lx + r, ly);
+            ctx.closePath();
+          }
+          ctx.shadowColor = "rgba(0, 0, 0, 0.12)";
+          ctx.shadowBlur = 4 / scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2 / scale;
           ctx.fillStyle = labelBg;
-          ctx.fillRect(lx, ly, lw, lh);
+          ctx.fill();
+          ctx.shadowColor = "transparent";
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
           ctx.strokeStyle = labelStroke;
           ctx.lineWidth = 1 / scale;
-          ctx.strokeRect(lx, ly, lw, lh);
+          ctx.stroke();
           ctx.fillStyle = labelColor;
           ctx.fillText(label, labelX, labelY);
         }
