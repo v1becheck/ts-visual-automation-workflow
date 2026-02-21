@@ -134,7 +134,7 @@ export default function AlignmentGuides({ drag }: Props) {
   if (lineData == null) return null;
 
   const stroke = "var(--slate-500, #64748b)";
-  const lineProps = { stroke, strokeWidth: 0.3, strokeOpacity: 0.35, strokeDasharray: "10 7" };
+  const lineProps = { stroke, strokeWidth: 0.3, strokeOpacity: 0.9, strokeDasharray: "10 7" };
 
   return (
     <Panel

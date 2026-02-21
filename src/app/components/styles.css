@@ -583,6 +583,50 @@
   background: var(--slate-200);
 }
 
+.crosshair-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 1.125rem;
+  transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+}
+
+.crosshair-toggle-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--slate-800);
+}
+
+.crosshair-toggle-btn__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  display: block;
+}
+
+.crosshair-toggle-btn--on {
+  opacity: 1;
+  color: var(--sky-400);
+}
+
+.crosshair-toggle-btn--on .crosshair-toggle-btn__icon {
+  stroke: var(--sky-400);
+}
+
+.crosshair-toggle-btn:not(.crosshair-toggle-btn--on) {
+  opacity: 0.65;
+}
+
+[data-theme="light"] .crosshair-toggle-btn:hover {
+  background: var(--slate-200);
+}
+
 .theme-toggle {
   position: relative;
   display: flex;

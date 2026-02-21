@@ -84,6 +84,9 @@ const DEFAULT_NODE_HEIGHT = 50;
 const DRAG_THROTTLE_30FPS_KEY = "workflow-builder-drag-30fps";
 const DRAG_THROTTLE_MS = 33;
 
+/** When "false" in localStorage, crosshair lines are hidden when dragging a node. Default true. */
+const CROSSHAIR_ENABLED_KEY = "workflow-builder-crosshair-enabled";
+
 function getNodeDimensions(
   node: Node,
   nodeLookup?: Map<string, { internals?: { measured?: { width?: number; height?: number } } }>
@@ -153,6 +156,11 @@ const AutomationBuilder = () => {
   const [editingEdgeId, setEditingEdgeId] = useState<string | null>(null);
   const [editingEdgeLabel, setEditingEdgeLabel] = useState("");
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const [crosshairEnabled, setCrosshairEnabled] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.localStorage.getItem(CROSSHAIR_ENABLED_KEY);
+    return stored !== "false";
+  });
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -892,6 +900,38 @@ const AutomationBuilder = () => {
               >
                 ?
               </button>
+              <button
+                type="button"
+                className={`crosshair-toggle-btn ${crosshairEnabled ? "crosshair-toggle-btn--on" : ""}`}
+                onClick={() => {
+                  const next = !crosshairEnabled;
+                  setCrosshairEnabled(next);
+                  try {
+                    window.localStorage.setItem(CROSSHAIR_ENABLED_KEY, String(next));
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+                title={crosshairEnabled ? "Hide crosshair when dragging" : "Show crosshair when dragging"}
+                aria-label={crosshairEnabled ? "Hide crosshair when dragging" : "Show crosshair when dragging"}
+                aria-pressed={crosshairEnabled}
+              >
+                <svg
+                  className="crosshair-toggle-btn__icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <line x1="12" y1="3" x2="12" y2="8" />
+                  <line x1="12" y1="16" x2="12" y2="21" />
+                  <line x1="3" y1="12" x2="8" y2="12" />
+                  <line x1="16" y1="12" x2="21" y2="12" />
+                  <circle cx="12" cy="12" r="3" strokeWidth="1.25" />
+                </svg>
+              </button>
               <ThemeToggle />
             </div>
             {dragState != null && (
@@ -942,7 +982,13 @@ const AutomationBuilder = () => {
           <CustomMinimapWithEdges />
           <Controls />
           <Background />
-          <AlignmentGuides drag={dragState ? { centerX: dragState.centerX, centerY: dragState.centerY } : null} />
+          <AlignmentGuides
+            drag={
+              crosshairEnabled && dragState
+                ? { centerX: dragState.centerX, centerY: dragState.centerY }
+                : null
+            }
+          />
         </ReactFlow>
       </div>
       <Sidebar
