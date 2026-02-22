@@ -5,8 +5,9 @@ import Automation from "@/app/models/Automation";
 import { initialNodes, initialEdges } from "@/app/Constants";
 
 /**
- * GET /api/automation – return the first workflow or create one (for backward compat / default view).
+ * GET /api/automation – return the default workflow (newest by createdAt) or create one.
  * Query: ?id=... to load a specific workflow by id.
+ * When no id given, returns newest workflow so default selection matches list order (newest first).
  * When MONGODB_URI is not set, returns default in-memory workflow (no persistence).
  */
 export async function GET(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const first = await Automation.findOne().sort({ createdAt: 1 }).lean();
+    const first = await Automation.findOne().sort({ createdAt: -1 }).lean();
     if (first) {
       return Response.json({
         id: first._id.toString(),

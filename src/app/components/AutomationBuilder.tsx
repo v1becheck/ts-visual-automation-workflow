@@ -175,6 +175,7 @@ const AutomationBuilder = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const initialLoadDoneRef = useRef(false);
+  const initialLoadStartedRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipDirtyRef = useRef(false);
   const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
@@ -186,6 +187,8 @@ const AutomationBuilder = () => {
   } | null>(null);
   const dragStateRafRef = useRef<number | null>(null);
   const lastDragStateUpdateRef = useRef(0);
+  const renameCompletedAtRef = useRef<number>(0);
+  const RENAME_IGNORE_MS = 200;
   const SAVE_DEBOUNCE_MS = 1500;
 
   const fetchWorkflows = useCallback(async (): Promise<WorkflowListItem[]> => {
@@ -221,6 +224,9 @@ const AutomationBuilder = () => {
 
   const loadWorkflow = useCallback(
     async (id: string) => {
+      if (Date.now() - renameCompletedAtRef.current < RENAME_IGNORE_MS) {
+        return;
+      }
       try {
         const res = await fetch(`/api/automations/${id}`);
         if (!res.ok) {
@@ -290,6 +296,9 @@ const AutomationBuilder = () => {
           toast.error(err.error ?? "Failed to rename workflow");
           return;
         }
+        setWorkflows((prev) =>
+          prev.map((w) => (w.id === id ? { ...w, name: trimmed } : w))
+        );
         toast.success("Workflow renamed");
       } catch (err) {
         console.error("Failed to rename workflow:", err);
@@ -330,8 +339,11 @@ const AutomationBuilder = () => {
     [workflowId, fetchWorkflows, loadWorkflow, setNodes, setEdges, toast]
   );
 
-  // Load initial workflow and workflow list on mount
+  // Load initial workflow and workflow list on mount (run only once to avoid overwriting current workflow when toast/fitView change after rename etc.)
   useEffect(() => {
+    if (initialLoadStartedRef.current) return;
+    initialLoadStartedRef.current = true;
+
     const getData = async () => {
       try {
         const [autoRes, listRes] = await Promise.all([
