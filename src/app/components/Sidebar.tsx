@@ -162,7 +162,14 @@ const Sidebar = ({
                           type="button"
                           className={`sidebar-workflow-btn ${currentWorkflowId === w.id ? "sidebar-workflow-btn--active" : ""}`}
                           onClick={() => onSelectWorkflow?.(w.id)}
-                          title={w.name}
+                          onDoubleClick={(e) => {
+                            if (onRenameWorkflow) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setEditingWorkflowId(w.id);
+                            }
+                          }}
+                          title={`${w.name} (double-click to rename)`}
                         >
                           <span className="sidebar-workflow-btn__name">{w.name}</span>
                         </button>
