@@ -290,9 +290,6 @@ const AutomationBuilder = () => {
           toast.error(err.error ?? "Failed to rename workflow");
           return;
         }
-        setWorkflows((prev) =>
-          prev.map((w) => (w.id === id ? { ...w, name: trimmed } : w))
-        );
         toast.success("Workflow renamed");
       } catch (err) {
         console.error("Failed to rename workflow:", err);
