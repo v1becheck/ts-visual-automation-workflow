@@ -12,7 +12,7 @@ export async function GET() {
       return Response.json([]);
     }
     const docs = await Automation.find({})
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .select("_id name createdAt updatedAt")
       .lean();
     return Response.json(

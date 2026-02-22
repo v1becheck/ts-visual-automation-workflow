@@ -290,14 +290,16 @@ const AutomationBuilder = () => {
           toast.error(err.error ?? "Failed to rename workflow");
           return;
         }
-        await fetchWorkflows();
+        setWorkflows((prev) =>
+          prev.map((w) => (w.id === id ? { ...w, name: trimmed } : w))
+        );
         toast.success("Workflow renamed");
       } catch (err) {
         console.error("Failed to rename workflow:", err);
         toast.error("Failed to rename workflow");
       }
     },
-    [fetchWorkflows, toast]
+    [toast]
   );
 
   const deleteWorkflow = useCallback(
