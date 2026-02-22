@@ -92,6 +92,25 @@ const DRAG_THROTTLE_MS = 33;
 
 /** When "false" in localStorage, crosshair lines are hidden when dragging a node. Default true. */
 const CROSSHAIR_ENABLED_KEY = "workflow-builder-crosshair-enabled";
+const WORKFLOW_ORDER_KEY = "workflow-builder-workflow-order";
+
+function applyStoredWorkflowOrder(
+  list: WorkflowListItem[],
+  storedIds: string[]
+): WorkflowListItem[] {
+  if (storedIds.length === 0) return list;
+  const byId = new Map(list.map((w) => [w.id, w]));
+  const ordered: WorkflowListItem[] = [];
+  for (const id of storedIds) {
+    const w = byId.get(id);
+    if (w) ordered.push(w);
+  }
+  const orderedIds = new Set(ordered.map((w) => w.id));
+  for (const w of list) {
+    if (!orderedIds.has(w.id)) ordered.push(w);
+  }
+  return ordered;
+}
 
 /** Internal node has measured at top level; fall back to internals.measured then node.width/height */
 function getNodeDimensions(
@@ -196,7 +215,19 @@ const AutomationBuilder = () => {
       const res = await fetch("/api/automations");
       if (!res.ok) return [];
       const list = await res.json();
-      const next = Array.isArray(list) ? list : [];
+      const rawList = Array.isArray(list) ? list : [];
+      let next = rawList;
+      if (typeof window !== "undefined") {
+        try {
+          const stored = window.localStorage.getItem(WORKFLOW_ORDER_KEY);
+          const storedIds: string[] = stored ? JSON.parse(stored) : [];
+          if (Array.isArray(storedIds) && storedIds.length > 0) {
+            next = applyStoredWorkflowOrder(rawList, storedIds);
+          }
+        } catch {
+          /* ignore */
+        }
+      }
       setWorkflows(next);
       return next;
     } catch {
@@ -362,7 +393,20 @@ const AutomationBuilder = () => {
         }
         if (listRes.ok) {
           const list = await listRes.json();
-          setWorkflows(Array.isArray(list) ? list : []);
+          const rawList = Array.isArray(list) ? list : [];
+          let ordered = rawList;
+          if (typeof window !== "undefined") {
+            try {
+              const stored = window.localStorage.getItem(WORKFLOW_ORDER_KEY);
+              const storedIds: string[] = stored ? JSON.parse(stored) : [];
+              if (Array.isArray(storedIds) && storedIds.length > 0) {
+                ordered = applyStoredWorkflowOrder(rawList, storedIds);
+              }
+            } catch {
+              /* ignore invalid stored order */
+            }
+          }
+          setWorkflows(ordered);
         }
       } catch (err) {
         console.error("Failed to load:", err);
@@ -1220,7 +1264,19 @@ const AutomationBuilder = () => {
         onNewWorkflow={createNewWorkflow}
         onSelectWorkflow={loadWorkflow}
         onRenameWorkflow={renameWorkflow}
-        onReorderWorkflows={(next) => setWorkflows(next)}
+        onReorderWorkflows={(next) => {
+          setWorkflows(next);
+          if (typeof window !== "undefined") {
+            try {
+              window.localStorage.setItem(
+                WORKFLOW_ORDER_KEY,
+                JSON.stringify(next.map((w) => w.id))
+              );
+            } catch {
+              /* ignore */
+            }
+          }
+        }}
         onDeleteWorkflow={deleteWorkflow}
       />
 
