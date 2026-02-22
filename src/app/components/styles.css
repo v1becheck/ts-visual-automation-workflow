@@ -1110,6 +1110,33 @@
   margin-bottom: 0;
 }
 
+.automation-builder .sidebar-workflow-item.sidebar-workflow-item--dragging {
+  opacity: 0.5;
+}
+
+.automation-builder .sidebar-workflow-item.sidebar-workflow-item--drag-over {
+  outline: 1px dashed var(--sky-500);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.automation-builder .sidebar-workflow-drag-handle {
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--slate-500);
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  line-height: 1;
+  user-select: none;
+  border-radius: 0.25rem;
+}
+.automation-builder .sidebar-workflow-drag-handle:hover {
+  color: var(--slate-400);
+}
+.automation-builder .sidebar-workflow-drag-handle:active {
+  cursor: grabbing;
+}
+
 .automation-builder .sidebar-workflow-item .sidebar-workflow-btn {
   flex: 1;
   min-width: 0;

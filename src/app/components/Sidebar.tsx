@@ -62,6 +62,8 @@ const SIDEBAR_SECTIONS: { label: string; nodes: { type: NodeType; label: string 
   },
 ];
 
+const WORKFLOW_DRAG_TYPE = "application/x-workflow-reorder";
+
 type SidebarProps = {
   onLoadTemplate?: (template: WorkflowTemplate) => void;
   workflows?: WorkflowListItem[];
@@ -69,6 +71,7 @@ type SidebarProps = {
   onNewWorkflow?: () => void;
   onSelectWorkflow?: (id: string) => void;
   onRenameWorkflow?: (id: string, name: string) => void;
+  onReorderWorkflows?: (workflows: WorkflowListItem[]) => void;
   onDeleteWorkflow?: (id: string) => void;
 };
 
@@ -79,17 +82,57 @@ const Sidebar = ({
   onNewWorkflow,
   onSelectWorkflow,
   onRenameWorkflow,
+  onReorderWorkflows,
   onDeleteWorkflow,
 }: SidebarProps) => {
   const { setType } = useDnD();
   const [templatesOpen, setTemplatesOpen] = useState(true);
   const [workflowsOpen, setWorkflowsOpen] = useState(true);
   const [editingWorkflowId, setEditingWorkflowId] = useState<string | null>(null);
+  const [draggedWorkflowId, setDraggedWorkflowId] = useState<string | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingWorkflowId) editInputRef.current?.focus();
   }, [editingWorkflowId]);
+
+  const handleWorkflowDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData(WORKFLOW_DRAG_TYPE, id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id); // fallback
+    setDraggedWorkflowId(id);
+  };
+
+  const handleWorkflowDragEnd = () => {
+    setDraggedWorkflowId(null);
+    setDragOverIndex(null);
+  };
+
+  const handleWorkflowDragOver = (e: React.DragEvent, index: number) => {
+    if (!e.dataTransfer.types.includes(WORKFLOW_DRAG_TYPE)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  };
+
+  const handleWorkflowDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleWorkflowDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    const id = e.dataTransfer.getData(WORKFLOW_DRAG_TYPE);
+    if (!id || !onReorderWorkflows || workflows.length === 0) return;
+    const fromIndex = workflows.findIndex((w) => w.id === id);
+    if (fromIndex === -1 || fromIndex === dropIndex) return;
+    const next = [...workflows];
+    const [removed] = next.splice(fromIndex, 1);
+    next.splice(dropIndex, 0, removed);
+    onReorderWorkflows(next);
+    setDraggedWorkflowId(null);
+  };
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     setType(nodeType);
@@ -131,8 +174,14 @@ const Sidebar = ({
                 {workflows.length === 0 && (
                   <li className="sidebar-workflow-list__empty">No workflows yet</li>
                 )}
-                {workflows.map((w) => (
-                  <li key={w.id} className="sidebar-workflow-item">
+                {workflows.map((w, index) => (
+                  <li
+                    key={w.id}
+                    className={`sidebar-workflow-item ${draggedWorkflowId === w.id ? "sidebar-workflow-item--dragging" : ""} ${dragOverIndex === index ? "sidebar-workflow-item--drag-over" : ""}`}
+                    onDragOver={onReorderWorkflows ? (e) => handleWorkflowDragOver(e, index) : undefined}
+                    onDragLeave={onReorderWorkflows ? handleWorkflowDragLeave : undefined}
+                    onDrop={onReorderWorkflows ? (e) => handleWorkflowDrop(e, index) : undefined}
+                  >
                     {editingWorkflowId === w.id ? (
                       <input
                         ref={editInputRef}
@@ -158,6 +207,19 @@ const Sidebar = ({
                       />
                     ) : (
                       <>
+                        {onReorderWorkflows && (
+                          <span
+                            className="sidebar-workflow-drag-handle"
+                            draggable
+                            onDragStart={(e) => handleWorkflowDragStart(e, w.id)}
+                            onDragEnd={handleWorkflowDragEnd}
+                            onClick={(e) => e.stopPropagation()}
+                            title="Drag to reorder"
+                            aria-label="Drag to reorder"
+                          >
+                            ⋮⋮
+                          </span>
+                        )}
                         <button
                           type="button"
                           className={`sidebar-workflow-btn ${currentWorkflowId === w.id ? "sidebar-workflow-btn--active" : ""}`}

@@ -1220,6 +1220,7 @@ const AutomationBuilder = () => {
         onNewWorkflow={createNewWorkflow}
         onSelectWorkflow={loadWorkflow}
         onRenameWorkflow={renameWorkflow}
+        onReorderWorkflows={(next) => setWorkflows(next)}
         onDeleteWorkflow={deleteWorkflow}
       />
 
