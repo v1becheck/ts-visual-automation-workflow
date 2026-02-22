@@ -235,12 +235,15 @@ const AutomationBuilder = () => {
         setEdges(Array.isArray(data.edges) ? data.edges : []);
         setWorkflowId(data.id);
         setIsDirty(false);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+        });
       } catch (err) {
         console.error("Failed to load workflow:", err);
         toast.error("Failed to load workflow.");
       }
     },
-    [setNodes, setEdges, toast]
+    [setNodes, setEdges, toast, fitView]
   );
 
   const createNewWorkflow = useCallback(async () => {
@@ -263,11 +266,14 @@ const AutomationBuilder = () => {
       setIsDirty(false);
       await fetchWorkflows();
       toast.success("Workflow created");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+      });
     } catch (err) {
       console.error("Failed to create workflow:", err);
       toast.error("Failed to create workflow");
     }
-  }, [setNodes, setEdges, fetchWorkflows, toast]);
+  }, [setNodes, setEdges, fetchWorkflows, toast, fitView]);
 
   const renameWorkflow = useCallback(
     async (id: string, name: string) => {
@@ -339,6 +345,9 @@ const AutomationBuilder = () => {
           setEdges(Array.isArray(automation.edges) ? automation.edges : []);
           if (automation.id) setWorkflowId(automation.id);
           setIsDirty(false);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+          });
         }
         if (listRes.ok) {
           const list = await listRes.json();
@@ -355,7 +364,7 @@ const AutomationBuilder = () => {
       }
     };
     getData();
-  }, [setNodes, setEdges, toast]);
+  }, [setNodes, setEdges, toast, fitView]);
 
   // Mark dirty when nodes/edges change (after initial load and when we have a workflow)
   useEffect(() => {
@@ -774,9 +783,9 @@ const AutomationBuilder = () => {
         setShortcutsModalOpen((open) => !open);
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "0") {
+      if ((e.ctrlKey || e.metaKey) && e.key === " ") {
         e.preventDefault();
-        fitView({ duration: 300 });
+        fitView({ padding: 0.2, duration: 300 });
         return;
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "t") {
