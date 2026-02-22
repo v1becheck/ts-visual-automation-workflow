@@ -8,7 +8,7 @@
 
 The app lets you build automation workflows by dragging nodes onto a canvas and connecting them with edges. Each node represents an action or trigger (e.g. webhook, email, delay); edges define the flow. You can edit node labels and types in a modal, add labels to edges (double-click edge), validate the workflow (cycles, orphaned nodes), undo/redo, copy/paste/duplicate nodes, and export/import workflows as JSON. Workflows are persisted to MongoDB (local or Atlas) with manual save (and optional debounced auto-save).
 
-**Main features:** Drag-and-drop node palette; node edit modal (label + type); edge labels (double-click edge or select + Enter); workflow list in sidebar (create, switch, rename, delete); manual Save + “Unsaved” indicator and Ctrl+S; workflow validation panel; undo/redo; copy (Ctrl+C), paste at cursor (Ctrl+V), duplicate (Ctrl+D); multi-select (Shift+drag box, Ctrl+click to add); “Go to node” search; export/import; workflow templates; dark/light theme; minimap with zoom (buttons + scroll) and drag-to-pan; keyboard shortcuts (Ctrl+/).
+**Main features:** Drag-and-drop node palette; node edit modal (label + type); edge labels (double-click edge or select + Enter); workflow list in sidebar (create, switch, rename, delete); manual Save + “Unsaved” indicator and Ctrl+S; workflow validation panel; undo/redo; copy (Ctrl+C), paste at cursor (Ctrl+V), duplicate (Ctrl+D); multi-select (Shift+drag box, Ctrl+click to add); “Go to node” search; export/import; workflow templates; dark/light theme; minimap with zoom (buttons + scroll) and drag-to-pan; keyboard shortcuts (Ctrl+/). Toast notifications for save/load/import/export and workflow CRUD replace alerts.
 
 ## Tech Stack
 
@@ -108,7 +108,7 @@ npm test
 1. **Auth** – Sign-in and scope workflows to users (or API keys for programmatic access).
 2. **Tests** – Broader unit tests (validation, export/import), API integration tests, and E2E for critical paths.
 3. **Rate limiting** – Protect the API from abuse when public.
-4. **Error feedback** – Toasts or inline messages for save/load failures instead of only console.
+4. **Error feedback** – Toast notifications are implemented for save/load/import/export and workflow CRUD; further inline messages or retry actions could be added.
 5. **Workflow-runner service** - queue (BullMQ / SQS) and execution logs
 
 ## License

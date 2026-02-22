@@ -17,6 +17,7 @@ const SHORTCUTS: { action: string; keys: string }[] = [
   { action: "Edit edge label", keys: "Double-click edge or select edge + Enter" },
   { action: "Fit view", keys: "Ctrl+0" },
   { action: "Open this shortcuts help", keys: "Ctrl+/" },
+  { action: "Test toast notifications", keys: "Ctrl+Shift+T" },
 ];
 
 const isMac =

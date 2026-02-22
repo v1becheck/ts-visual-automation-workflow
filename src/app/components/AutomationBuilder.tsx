@@ -30,6 +30,7 @@ import ValidationPanel from "./ValidationPanel";
 import UndoRedoPanel from "./UndoRedoPanel";
 import ExportImportPanel from "./ExportImportPanel";
 import { useDnD } from "../contexts/DnDContext";
+import { useToast } from "../contexts/ToastContext";
 import { validateWorkflow } from "../lib/workflowValidation";
 import { useWorkflowHistory } from "../hooks/useWorkflowHistory";
 import {
@@ -140,6 +141,7 @@ const AutomationBuilder = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const storeApi = useStoreApi();
+  const toast = useToast();
   const [dragState, setDragState] = useState<{
     centerX: number;
     centerY: number;
@@ -212,9 +214,10 @@ const AutomationBuilder = () => {
       return res.ok;
     } catch (err) {
       console.error("Failed to save workflow:", err);
+      toast.error("Failed to save workflow.");
       return false;
     }
-  }, [workflowId, nodes, edges]);
+  }, [workflowId, nodes, edges, toast]);
 
   const loadWorkflow = useCallback(
     async (id: string) => {
@@ -223,6 +226,7 @@ const AutomationBuilder = () => {
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           console.error("Failed to load workflow:", err.error || res.statusText);
+          toast.error(err.error ?? "Failed to load workflow.");
           return;
         }
         const data = await res.json();
@@ -233,9 +237,10 @@ const AutomationBuilder = () => {
         setIsDirty(false);
       } catch (err) {
         console.error("Failed to load workflow:", err);
+        toast.error("Failed to load workflow.");
       }
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges, toast]
   );
 
   const createNewWorkflow = useCallback(async () => {
@@ -247,7 +252,7 @@ const AutomationBuilder = () => {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        window.alert(err.error ?? "Failed to create workflow");
+        toast.error(err.error ?? "Failed to create workflow");
         return;
       }
       const data = await res.json();
@@ -257,11 +262,12 @@ const AutomationBuilder = () => {
       setWorkflowId(data.id);
       setIsDirty(false);
       await fetchWorkflows();
+      toast.success("Workflow created");
     } catch (err) {
       console.error("Failed to create workflow:", err);
-      window.alert("Failed to create workflow");
+      toast.error("Failed to create workflow");
     }
-  }, [setNodes, setEdges, fetchWorkflows]);
+  }, [setNodes, setEdges, fetchWorkflows, toast]);
 
   const renameWorkflow = useCallback(
     async (id: string, name: string) => {
@@ -275,16 +281,17 @@ const AutomationBuilder = () => {
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          window.alert(err.error ?? "Failed to rename workflow");
+          toast.error(err.error ?? "Failed to rename workflow");
           return;
         }
         await fetchWorkflows();
+        toast.success("Workflow renamed");
       } catch (err) {
         console.error("Failed to rename workflow:", err);
-        window.alert("Failed to rename workflow");
+        toast.error("Failed to rename workflow");
       }
     },
-    [fetchWorkflows]
+    [fetchWorkflows, toast]
   );
 
   const deleteWorkflow = useCallback(
@@ -294,7 +301,7 @@ const AutomationBuilder = () => {
         const res = await fetch(`/api/automations/${id}`, { method: "DELETE" });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          window.alert(err.error ?? "Failed to delete workflow");
+          toast.error(err.error ?? "Failed to delete workflow");
           return;
         }
         const wasCurrent = workflowId === id;
@@ -309,12 +316,13 @@ const AutomationBuilder = () => {
             setEdges([]);
           }
         }
+        toast.success("Workflow deleted");
       } catch (err) {
         console.error("Failed to delete workflow:", err);
-        window.alert("Failed to delete workflow");
+        toast.error("Failed to delete workflow");
       }
     },
-    [workflowId, fetchWorkflows, loadWorkflow, setNodes, setEdges]
+    [workflowId, fetchWorkflows, loadWorkflow, setNodes, setEdges, toast]
   );
 
   // Load initial workflow and workflow list on mount
@@ -338,6 +346,7 @@ const AutomationBuilder = () => {
         }
       } catch (err) {
         console.error("Failed to load:", err);
+        toast.error("Failed to load workflows");
       } finally {
         setIsInitialLoading(false);
         setTimeout(() => {
@@ -346,7 +355,7 @@ const AutomationBuilder = () => {
       }
     };
     getData();
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, toast]);
 
   // Mark dirty when nodes/edges change (after initial load and when we have a workflow)
   useEffect(() => {
@@ -376,8 +385,9 @@ const AutomationBuilder = () => {
     setIsSaving(true);
     const ok = await saveCurrentWorkflow();
     setIsSaving(false);
-    if (!ok) window.alert("Failed to save workflow.");
-  }, [workflowId, isSaving, saveCurrentWorkflow]);
+    if (ok) toast.success("Workflow saved");
+    else toast.error("Failed to save workflow.");
+  }, [workflowId, isSaving, saveCurrentWorkflow, toast]);
 
   const deleteSelected = useCallback(() => {
     const selectedNodeIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));
@@ -571,9 +581,9 @@ const AutomationBuilder = () => {
       a.click();
     } catch (err) {
       console.error("Export PNG failed:", err);
-      window.alert("Failed to export PNG.");
+      toast.error("Failed to export PNG.");
     }
-  }, [fitView, storeApi, edges]);
+  }, [fitView, storeApi, edges, toast]);
 
   const deselectAll = useCallback(() => {
     setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
@@ -767,6 +777,13 @@ const AutomationBuilder = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === "0") {
         e.preventDefault();
         fitView({ duration: 300 });
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        toast.success("Sample success message");
+        toast.error("Sample error message");
+        toast.info("Sample info message");
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -790,6 +807,7 @@ const AutomationBuilder = () => {
     setEditingNodeId,
     setEditingEdgeId,
     setEditingEdgeLabel,
+    toast,
   ]);
 
   const onConnect: OnConnect = useCallback(

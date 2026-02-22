@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Panel } from "@xyflow/react";
 import type { Node, Edge } from "@xyflow/react";
+import { useToast } from "../contexts/ToastContext";
 import { exportWorkflow, parseWorkflowFile } from "../lib/workflowExport";
 import "./styles.css";
 
@@ -20,6 +21,7 @@ type Props = {
 
 export default function ExportImportPanel({ nodes, edges, onImport, onExportPng, embedded }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
 
   const handleExport = () => {
     const json = exportWorkflow(nodes, edges);
@@ -47,8 +49,9 @@ export default function ExportImportPanel({ nodes, edges, onImport, onExportPng,
       const result = parseWorkflowFile(text);
       if (result.ok) {
         onImport(result.nodes, result.edges);
+        toast.success("Workflow imported");
       } else {
-        window.alert(`Import failed: ${result.error}`);
+        toast.error(`Import failed: ${result.error}`);
       }
     };
     reader.readAsText(file);
