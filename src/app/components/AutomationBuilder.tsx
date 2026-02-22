@@ -412,10 +412,13 @@ const AutomationBuilder = () => {
         console.error("Failed to load:", err);
         toast.error("Failed to load workflows");
       } finally {
-        setIsInitialLoading(false);
+        const LOADER_EXTEND_MS = 500;
         setTimeout(() => {
-          initialLoadDoneRef.current = true;
-        }, 0);
+          setIsInitialLoading(false);
+          setTimeout(() => {
+            initialLoadDoneRef.current = true;
+          }, 0);
+        }, LOADER_EXTEND_MS);
       }
     };
     getData();
