@@ -93,6 +93,7 @@ const DRAG_THROTTLE_MS = 33;
 /** When "false" in localStorage, crosshair lines are hidden when dragging a node. Default true. */
 const CROSSHAIR_ENABLED_KEY = "workflow-builder-crosshair-enabled";
 const WORKFLOW_ORDER_KEY = "workflow-builder-workflow-order";
+const WORKFLOW_ACTIVE_ID_KEY = "workflow-builder-active-id";
 
 function applyStoredWorkflowOrder(
   list: WorkflowListItem[],
@@ -381,7 +382,53 @@ const AutomationBuilder = () => {
           fetch("/api/automation"),
           fetch("/api/automations"),
         ]);
-        if (autoRes.ok) {
+        const list = listRes.ok ? await listRes.json() : [];
+        const rawList = Array.isArray(list) ? list : [];
+        let ordered = rawList;
+        if (typeof window !== "undefined") {
+          try {
+            const stored = window.localStorage.getItem(WORKFLOW_ORDER_KEY);
+            const storedIds: string[] = stored ? JSON.parse(stored) : [];
+            if (Array.isArray(storedIds) && storedIds.length > 0) {
+              ordered = applyStoredWorkflowOrder(rawList, storedIds);
+            }
+          } catch {
+            /* ignore invalid stored order */
+          }
+        }
+        setWorkflows(ordered);
+
+        const listIds = new Set(ordered.map((w: WorkflowListItem) => w.id));
+        const storedActiveId =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem(WORKFLOW_ACTIVE_ID_KEY)
+            : null;
+        const useStored = storedActiveId && listIds.has(storedActiveId);
+
+        if (useStored) {
+          const res = await fetch(`/api/automations/${storedActiveId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setNodes(Array.isArray(data.nodes) ? data.nodes : []);
+            setEdges(Array.isArray(data.edges) ? data.edges : []);
+            setWorkflowId(data.id);
+            setIsDirty(false);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+            });
+          } else {
+            const automation = autoRes.ok ? await autoRes.json() : null;
+            if (automation?.id) {
+              setNodes(Array.isArray(automation.nodes) ? automation.nodes : []);
+              setEdges(Array.isArray(automation.edges) ? automation.edges : []);
+              setWorkflowId(automation.id);
+              setIsDirty(false);
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+              });
+            }
+          }
+        } else if (autoRes.ok) {
           const automation = await autoRes.json();
           setNodes(Array.isArray(automation.nodes) ? automation.nodes : []);
           setEdges(Array.isArray(automation.edges) ? automation.edges : []);
@@ -390,23 +437,6 @@ const AutomationBuilder = () => {
           requestAnimationFrame(() => {
             requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
           });
-        }
-        if (listRes.ok) {
-          const list = await listRes.json();
-          const rawList = Array.isArray(list) ? list : [];
-          let ordered = rawList;
-          if (typeof window !== "undefined") {
-            try {
-              const stored = window.localStorage.getItem(WORKFLOW_ORDER_KEY);
-              const storedIds: string[] = stored ? JSON.parse(stored) : [];
-              if (Array.isArray(storedIds) && storedIds.length > 0) {
-                ordered = applyStoredWorkflowOrder(rawList, storedIds);
-              }
-            } catch {
-              /* ignore invalid stored order */
-            }
-          }
-          setWorkflows(ordered);
         }
       } catch (err) {
         console.error("Failed to load:", err);
@@ -423,6 +453,20 @@ const AutomationBuilder = () => {
     };
     getData();
   }, [setNodes, setEdges, toast, fitView]);
+
+  // Persist active workflow id so it can be restored on reload (don't clear on first render when workflowId is still null)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (workflowId) {
+        window.localStorage.setItem(WORKFLOW_ACTIVE_ID_KEY, workflowId);
+      } else if (initialLoadDoneRef.current) {
+        window.localStorage.removeItem(WORKFLOW_ACTIVE_ID_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [workflowId]);
 
   // Mark dirty when nodes/edges change (after initial load and when we have a workflow)
   useEffect(() => {
