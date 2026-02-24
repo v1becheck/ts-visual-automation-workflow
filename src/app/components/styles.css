@@ -225,6 +225,115 @@
   background: var(--sky-400);
 }
 
+/* ---- Delete workflow modal ---- */
+.delete-workflow-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(0);
+  opacity: 0;
+  transition: opacity 0.3s ease-out, backdrop-filter 0.3s ease-out;
+  pointer-events: none;
+}
+
+.delete-workflow-modal-overlay--open {
+  opacity: 1;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.delete-workflow-modal-overlay--closing {
+  opacity: 0;
+  backdrop-filter: blur(0);
+  pointer-events: none;
+}
+
+.delete-workflow-modal {
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-default);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-glow);
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.delete-workflow-modal--open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.delete-workflow-modal--closing {
+  opacity: 0;
+  transform: scale(0.98) translateY(6px);
+}
+
+.delete-workflow-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.delete-workflow-modal-desc {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  color: var(--slate-300);
+  line-height: 1.5;
+}
+
+.delete-workflow-modal-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  margin-top: 0.25rem;
+}
+
+.delete-workflow-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  min-width: 4.5rem;
+}
+
+.delete-workflow-modal-btn-cancel {
+  color: var(--slate-200);
+  background: transparent;
+  border: 1px solid var(--border-default);
+}
+
+.delete-workflow-modal-btn-cancel:hover {
+  background: rgba(51, 65, 85, 0.3);
+  border-color: var(--slate-600);
+}
+
+.delete-workflow-modal-btn-delete {
+  color: #fff;
+  background: #e11d48;
+  border: 1px solid #e11d48;
+}
+
+.delete-workflow-modal-btn-delete:hover {
+  background: #f43f5e;
+  border-color: #f43f5e;
+}
+
 /* ---- Keyboard shortcuts modal ---- */
 .keyboard-shortcuts-modal {
   max-width: 36rem;

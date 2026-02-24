@@ -24,6 +24,7 @@ import {
 
 import Sidebar, { type WorkflowListItem } from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
+import DeleteWorkflowModal from "./DeleteWorkflowModal";
 import EdgeEditModal from "./EdgeEditModal";
 import RunSimulationPanel from "./RunSimulationPanel";
 import ValidationPanel from "./ValidationPanel";
@@ -191,6 +192,7 @@ const AutomationBuilder = () => {
   });
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
+  const [workflowToDelete, setWorkflowToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -340,9 +342,8 @@ const AutomationBuilder = () => {
     [toast]
   );
 
-  const deleteWorkflow = useCallback(
+  const performDeleteWorkflow = useCallback(
     async (id: string) => {
-      if (!window.confirm("Delete this workflow? This cannot be undone.")) return;
       try {
         const res = await fetch(`/api/automations/${id}`, { method: "DELETE" });
         if (!res.ok) {
@@ -370,6 +371,11 @@ const AutomationBuilder = () => {
     },
     [workflowId, fetchWorkflows, loadWorkflow, setNodes, setEdges, toast]
   );
+
+  const deleteWorkflow = useCallback((id: string) => {
+    const w = workflows.find((x) => x.id === id);
+    setWorkflowToDelete(w ? { id: w.id, name: w.name } : { id, name: "Unknown" });
+  }, [workflows]);
 
   // Load initial workflow and workflow list on mount (run only once to avoid overwriting current workflow when toast/fitView change after rename etc.)
   useEffect(() => {
@@ -1342,6 +1348,18 @@ const AutomationBuilder = () => {
         initialLabel={editingEdgeLabel}
         onSave={handleSaveEdgeEdit}
         onClose={handleCloseEdgeEdit}
+      />
+
+      <DeleteWorkflowModal
+        isOpen={workflowToDelete !== null}
+        workflowName={workflowToDelete?.name ?? ""}
+        onConfirm={() => {
+          if (workflowToDelete) {
+            performDeleteWorkflow(workflowToDelete.id);
+            setWorkflowToDelete(null);
+          }
+        }}
+        onCancel={() => setWorkflowToDelete(null)}
       />
 
       <KeyboardShortcutsModal
