@@ -351,6 +351,18 @@ const AutomationBuilder = () => {
           toast.error(err.error ?? "Failed to delete workflow");
           return;
         }
+        if (typeof window !== "undefined") {
+          try {
+            const stored = window.localStorage.getItem(WORKFLOW_ORDER_KEY);
+            const storedIds: string[] = stored ? JSON.parse(stored) : [];
+            if (Array.isArray(storedIds)) {
+              const nextOrder = storedIds.filter((x) => x !== id);
+              window.localStorage.setItem(WORKFLOW_ORDER_KEY, JSON.stringify(nextOrder));
+            }
+          } catch {
+            /* ignore */
+          }
+        }
         const wasCurrent = workflowId === id;
         const list = await fetchWorkflows();
         if (wasCurrent) {
