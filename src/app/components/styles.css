@@ -474,6 +474,47 @@
   justify-content: flex-end;
 }
 
+/* ---- Node context menu ---- */
+.node-context-menu {
+  position: fixed;
+  z-index: 200;
+  min-width: 11rem;
+  padding: 0.35rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-default);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-glow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.node-context-menu__item {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.node-context-menu__item:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--border-default);
+}
+
+.node-context-menu__item--danger {
+  color: #fda4af;
+}
+
+.node-context-menu__item--danger:hover {
+  background: rgba(225, 29, 72, 0.14);
+  border-color: rgba(225, 29, 72, 0.35);
+}
+
 /* ---- Go to node (search) ---- */
 .go-to-node-panel {
   display: flex;

@@ -195,6 +195,11 @@ const AutomationBuilder = () => {
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
   const [workflowToDelete, setWorkflowToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [nodeContextMenu, setNodeContextMenu] = useState<{
+    nodeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const [firstRunModalOpen, setFirstRunModalOpen] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
@@ -892,7 +897,9 @@ const AutomationBuilder = () => {
       }
       if (e.key === "Escape") {
         e.preventDefault();
-        if (editingNodeId !== null) {
+        if (nodeContextMenu !== null) {
+          setNodeContextMenu(null);
+        } else if (editingNodeId !== null) {
           setEditingNodeId(null);
         } else if (editingEdgeId !== null) {
           setEditingEdgeId(null);
@@ -969,10 +976,12 @@ const AutomationBuilder = () => {
     pasteFromClipboard,
     duplicateSelected,
     deselectAll,
+    nodeContextMenu,
     editingNodeId,
     editingEdgeId,
     nodes,
     edges,
+    setNodeContextMenu,
     setEditingNodeId,
     setEditingEdgeId,
     setEditingEdgeLabel,
@@ -1029,19 +1038,79 @@ const AutomationBuilder = () => {
     setEditingNodeType(getNodeType(node));
   }, []);
 
-  const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      if (!event.ctrlKey && !event.metaKey) return;
-      event.preventDefault();
+  const deleteNodeById = useCallback(
+    (nodeId: string) => {
       pushStateBefore(nodes, edges);
       markAction();
-      setNodes((nds) => nds.filter((n) => n.id !== node.id));
-      setEdges((eds) =>
-        eds.filter((e) => e.source !== node.id && e.target !== node.id)
-      );
+      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     },
     [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
   );
+
+  const duplicateNodeById = useCallback(
+    (nodeId: string) => {
+      const source = nodes.find((n) => n.id === nodeId);
+      if (!source) return;
+      pushStateBefore(nodes, edges);
+      markAction();
+      const newNode: Node = {
+        ...source,
+        id: getUniqueNodeId(nodes),
+        position: {
+          x: source.position.x + 80,
+          y: source.position.y + 80,
+        },
+        selected: true,
+      };
+      setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), newNode]);
+      setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
+    },
+    [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
+  );
+
+  const openNodeEdit = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+      setEditingNodeId(node.id);
+      setEditingNodeLabel(getNodeLabel(node));
+      setEditingNodeType(getNodeType(node));
+    },
+    [nodes]
+  );
+
+  const onNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      setNodeContextMenu(null);
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      deleteNodeById(node.id);
+    },
+    [deleteNodeById]
+  );
+
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const menuW = 180;
+      const menuH = 140;
+      const pad = 8;
+      const maxX = window.innerWidth - menuW - pad;
+      const maxY = window.innerHeight - menuH - pad;
+      const x = Math.max(pad, Math.min(event.clientX, maxX));
+      const y = Math.max(pad, Math.min(event.clientY, maxY));
+      setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === node.id })));
+      setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
+      setNodeContextMenu({ nodeId: node.id, x, y });
+    },
+    [setNodes, setEdges]
+  );
+
+  const onPaneClick = useCallback(() => {
+    setNodeContextMenu(null);
+  }, []);
 
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
@@ -1239,6 +1308,8 @@ const AutomationBuilder = () => {
           onDragOver={onDragOver}
           onNodeDoubleClick={onNodeDoubleClick}
           onNodeClick={onNodeClick}
+          onNodeContextMenu={onNodeContextMenu}
+          onPaneClick={onPaneClick}
           onEdgeClick={onEdgeClick}
           onEdgeDoubleClick={onEdgeDoubleClick}
           nodeTypes={nodeTypes}
@@ -1362,6 +1433,45 @@ const AutomationBuilder = () => {
           />
         </ReactFlow>
       </div>
+      {nodeContextMenu && (
+        <div
+          className="node-context-menu"
+          style={{ left: nodeContextMenu.x, top: nodeContextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              openNodeEdit(nodeContextMenu.nodeId);
+              setNodeContextMenu(null);
+            }}
+          >
+            Edit node
+          </button>
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              duplicateNodeById(nodeContextMenu.nodeId);
+              setNodeContextMenu(null);
+            }}
+          >
+            Duplicate node
+          </button>
+          <button
+            type="button"
+            className="node-context-menu__item node-context-menu__item--danger"
+            onClick={() => {
+              deleteNodeById(nodeContextMenu.nodeId);
+              setNodeContextMenu(null);
+            }}
+          >
+            Delete node
+          </button>
+        </div>
+      )}
       <Sidebar
         onLoadTemplate={loadTemplate}
         workflows={workflows}
