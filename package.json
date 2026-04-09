@@ -2,7 +2,7 @@
   "name": "ts-visual-automation-workflow",
   "version": "0.9.1",
   "private": true,
-  "author": "Miloš Ilić",
+  "author": "",
   "engines": {
     "node": ">=22"
   },

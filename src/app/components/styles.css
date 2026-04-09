@@ -334,6 +334,86 @@
   border-color: #f43f5e;
 }
 
+/* ---- First run onboarding modal ---- */
+.first-run-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(6px);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.first-run-modal-overlay--open {
+  opacity: 1;
+}
+
+.first-run-modal {
+  width: 100%;
+  max-width: 32rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-default);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-glow);
+}
+
+.first-run-modal--open {
+  opacity: 1;
+}
+
+.first-run-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.first-run-modal-desc {
+  margin: 0 0 0.75rem;
+  color: var(--slate-300);
+}
+
+.first-run-modal-list {
+  margin: 0 0 1rem 1.25rem;
+  padding: 0;
+  color: var(--slate-200);
+  line-height: 1.6;
+}
+
+.first-run-modal-note {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--slate-400);
+}
+
+.first-run-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.first-run-modal-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.first-run-modal-btn-primary {
+  color: var(--slate-950);
+  background: var(--sky-500);
+}
+
+.first-run-modal-btn-primary:hover {
+  background: var(--sky-400);
+}
+
 /* ---- Keyboard shortcuts modal ---- */
 .keyboard-shortcuts-modal {
   max-width: 36rem;

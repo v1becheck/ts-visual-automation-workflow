@@ -25,6 +25,7 @@ import {
 import Sidebar, { type WorkflowListItem } from "./Sidebar";
 import NodeEditModal, { type NodeTypeOption } from "./NodeEditModal";
 import DeleteWorkflowModal from "./DeleteWorkflowModal";
+import FirstRunModal from "@/app/components/FirstRunModal";
 import EdgeEditModal from "./EdgeEditModal";
 import RunSimulationPanel from "./RunSimulationPanel";
 import ValidationPanel from "./ValidationPanel";
@@ -95,6 +96,7 @@ const DRAG_THROTTLE_MS = 33;
 const CROSSHAIR_ENABLED_KEY = "workflow-builder-crosshair-enabled";
 const WORKFLOW_ORDER_KEY = "workflow-builder-workflow-order";
 const WORKFLOW_ACTIVE_ID_KEY = "workflow-builder-active-id";
+const ONBOARDING_SEEN_KEY = "workflow-builder-onboarding-seen";
 
 function applyStoredWorkflowOrder(
   list: WorkflowListItem[],
@@ -193,6 +195,7 @@ const AutomationBuilder = () => {
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
   const [workflowToDelete, setWorkflowToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [firstRunModalOpen, setFirstRunModalOpen] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -485,6 +488,26 @@ const AutomationBuilder = () => {
       /* ignore */
     }
   }, [workflowId]);
+
+  useEffect(() => {
+    if (isInitialLoading || typeof window === "undefined") return;
+    try {
+      const seen = window.localStorage.getItem(ONBOARDING_SEEN_KEY);
+      if (seen !== "true") setFirstRunModalOpen(true);
+    } catch {
+      setFirstRunModalOpen(true);
+    }
+  }, [isInitialLoading]);
+
+  const closeFirstRunModal = useCallback(() => {
+    setFirstRunModalOpen(false);
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // Mark dirty when nodes/edges change (after initial load and when we have a workflow)
   useEffect(() => {
@@ -1373,6 +1396,8 @@ const AutomationBuilder = () => {
         }}
         onCancel={() => setWorkflowToDelete(null)}
       />
+
+      <FirstRunModal isOpen={firstRunModalOpen} onClose={closeFirstRunModal} />
 
       <KeyboardShortcutsModal
         isOpen={shortcutsModalOpen}
