@@ -212,6 +212,7 @@ const AutomationBuilder = () => {
     flowY: number;
   } | null>(null);
   const [firstRunModalOpen, setFirstRunModalOpen] = useState(false);
+  const [isSwitchingWorkflow, setIsSwitchingWorkflow] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -286,6 +287,8 @@ const AutomationBuilder = () => {
       if (Date.now() - renameCompletedAtRef.current < RENAME_IGNORE_MS) {
         return;
       }
+      if (id === workflowId) return;
+      setIsSwitchingWorkflow(true);
       try {
         const res = await fetch(`/api/automations/${id}`);
         if (!res.ok) {
@@ -308,9 +311,11 @@ const AutomationBuilder = () => {
       } catch (err) {
         console.error("Failed to load workflow:", err);
         toast.error("Failed to load workflow.");
+      } finally {
+        setTimeout(() => setIsSwitchingWorkflow(false), 200);
       }
     },
-    [setNodes, setEdges, toast, fitView, getDefaultFitPadding]
+    [workflowId, setNodes, setEdges, toast, fitView, getDefaultFitPadding]
   );
 
   const createNewWorkflow = useCallback(async () => {
@@ -1385,6 +1390,12 @@ const AutomationBuilder = () => {
   return (
     <div className="automation-builder">
       <div className="reactflow-wrapper" ref={reactFlowWrapper}>
+        {isSwitchingWorkflow && (
+          <div className="workflow-switch-loader" role="status" aria-live="polite">
+            <div className="app-loader__spinner workflow-switch-loader__spinner" aria-hidden />
+            <p className="app-loader__text">Loading workflow…</p>
+          </div>
+        )}
         <ReactFlow
           nodes={nodesWithValidation}
           edges={edges}
