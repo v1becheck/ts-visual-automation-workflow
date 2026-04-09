@@ -201,6 +201,7 @@ const AutomationBuilder = () => {
   const [isSaving, setIsSaving] = useState(false);
   const initialLoadDoneRef = useRef(false);
   const initialLoadStartedRef = useRef(false);
+  const initialFitPendingRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipDirtyRef = useRef(false);
   const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
@@ -259,6 +260,11 @@ const AutomationBuilder = () => {
     }
   }, [workflowId, nodes, edges, toast]);
 
+  const getDefaultFitPadding = useCallback(() => {
+    if (typeof window === "undefined") return 0.2;
+    return window.innerWidth >= 1280 ? 0.28 : 0.2;
+  }, []);
+
   const loadWorkflow = useCallback(
     async (id: string) => {
       if (Date.now() - renameCompletedAtRef.current < RENAME_IGNORE_MS) {
@@ -279,14 +285,16 @@ const AutomationBuilder = () => {
         setWorkflowId(data.id);
         setIsDirty(false);
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+          requestAnimationFrame(() =>
+            fitView({ padding: getDefaultFitPadding(), duration: 300 })
+          );
         });
       } catch (err) {
         console.error("Failed to load workflow:", err);
         toast.error("Failed to load workflow.");
       }
     },
-    [setNodes, setEdges, toast, fitView]
+    [setNodes, setEdges, toast, fitView, getDefaultFitPadding]
   );
 
   const createNewWorkflow = useCallback(async () => {
@@ -310,13 +318,15 @@ const AutomationBuilder = () => {
       await fetchWorkflows();
       toast.success("Workflow created");
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+        requestAnimationFrame(() =>
+          fitView({ padding: getDefaultFitPadding(), duration: 300 })
+        );
       });
     } catch (err) {
       console.error("Failed to create workflow:", err);
       toast.error("Failed to create workflow");
     }
-  }, [setNodes, setEdges, fetchWorkflows, toast, fitView]);
+  }, [setNodes, setEdges, fetchWorkflows, toast, fitView, getDefaultFitPadding]);
 
   const renameWorkflow = useCallback(
     async (id: string, name: string) => {
@@ -434,9 +444,7 @@ const AutomationBuilder = () => {
             setEdges(Array.isArray(data.edges) ? data.edges : []);
             setWorkflowId(data.id);
             setIsDirty(false);
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
-            });
+            initialFitPendingRef.current = true;
           } else {
             const automation = autoRes.ok ? await autoRes.json() : null;
             if (automation?.id) {
@@ -444,9 +452,7 @@ const AutomationBuilder = () => {
               setEdges(Array.isArray(automation.edges) ? automation.edges : []);
               setWorkflowId(automation.id);
               setIsDirty(false);
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
-              });
+              initialFitPendingRef.current = true;
             }
           }
         } else if (autoRes.ok) {
@@ -455,9 +461,7 @@ const AutomationBuilder = () => {
           setEdges(Array.isArray(automation.edges) ? automation.edges : []);
           if (automation.id) setWorkflowId(automation.id);
           setIsDirty(false);
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
-          });
+          initialFitPendingRef.current = true;
         }
       } catch (err) {
         console.error("Failed to load:", err);
@@ -473,7 +477,19 @@ const AutomationBuilder = () => {
       }
     };
     getData();
-  }, [setNodes, setEdges, toast, fitView]);
+  }, [setNodes, setEdges, toast, fitView, getDefaultFitPadding]);
+
+  // Ensure initial fit runs after loader is dismissed and canvas is mounted,
+  // so refresh uses the same framing as manual Ctrl+Space fit.
+  useEffect(() => {
+    if (isInitialLoading || !initialFitPendingRef.current) return;
+    initialFitPendingRef.current = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() =>
+        fitView({ padding: getDefaultFitPadding(), duration: 300 })
+      );
+    });
+  }, [isInitialLoading, fitView, getDefaultFitPadding]);
 
   // Persist active workflow id so it can be restored on reload (don't clear on first render when workflowId is still null)
   useEffect(() => {
@@ -928,7 +944,7 @@ const AutomationBuilder = () => {
       }
       if ((e.ctrlKey || e.metaKey) && e.key === " ") {
         e.preventDefault();
-        fitView({ padding: 0.2, duration: 300 });
+        fitView({ padding: getDefaultFitPadding(), duration: 300 });
         return;
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "t") {
@@ -942,6 +958,7 @@ const AutomationBuilder = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
     fitView,
+    getDefaultFitPadding,
     undo,
     redo,
     workflowId,

@@ -47,7 +47,7 @@ export default function FirstRunModal({ isOpen, onClose }: FirstRunModalProps) {
           <li>Use Save (Ctrl+S), Validate, and Run Simulation to test.</li>
         </ol>
         <p className="first-run-modal-note">
-          Tip: open keyboard shortcuts anytime with Ctrl+K.
+          Tip: open keyboard shortcuts anytime with Ctrl+/.
         </p>
         <div className="first-run-modal-actions">
           <button
