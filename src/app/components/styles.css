@@ -515,6 +515,16 @@
   border-color: rgba(225, 29, 72, 0.35);
 }
 
+[data-theme="light"] .node-context-menu__item--danger {
+  color: #be123c;
+}
+
+[data-theme="light"] .node-context-menu__item--danger:hover {
+  color: #9f1239;
+  background: rgba(225, 29, 72, 0.12);
+  border-color: rgba(190, 18, 60, 0.4);
+}
+
 /* ---- Go to node (search) ---- */
 .go-to-node-panel {
   display: flex;

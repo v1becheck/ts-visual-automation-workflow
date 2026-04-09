@@ -1126,6 +1126,18 @@ const AutomationBuilder = () => {
     [nodes, edges, pushStateBefore, markAction, setNodes, setEdges]
   );
 
+  const copyNodeById = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+      clipboardRef.current = {
+        nodes: [{ ...node, selected: false }],
+        edges: [],
+      };
+    },
+    [nodes]
+  );
+
   const openNodeEdit = useCallback(
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId);
@@ -1531,6 +1543,16 @@ const AutomationBuilder = () => {
             }}
           >
             Edit node
+          </button>
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              copyNodeById(nodeContextMenu.nodeId);
+              setNodeContextMenu(null);
+            }}
+          >
+            Copy node
           </button>
           <button
             type="button"
