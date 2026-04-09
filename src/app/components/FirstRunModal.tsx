@@ -43,7 +43,7 @@ export default function FirstRunModal({ isOpen, onClose }: FirstRunModalProps) {
         <ol className="first-run-modal-list">
           <li>Drag a node from the sidebar onto the canvas.</li>
           <li>Connect node handles to build your workflow path.</li>
-          <li>Click nodes/edges to edit labels and settings.</li>
+          <li>Double-click nodes/edges to edit labels and settings.</li>
           <li>Use Save (Ctrl+S), Validate, and Run Simulation to test.</li>
         </ol>
         <p className="first-run-modal-note">
