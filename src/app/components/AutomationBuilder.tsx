@@ -200,6 +200,17 @@ const AutomationBuilder = () => {
     x: number;
     y: number;
   } | null>(null);
+  const [edgeContextMenu, setEdgeContextMenu] = useState<{
+    edgeId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [paneContextMenu, setPaneContextMenu] = useState<{
+    x: number;
+    y: number;
+    flowX: number;
+    flowY: number;
+  } | null>(null);
   const [firstRunModalOpen, setFirstRunModalOpen] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
@@ -763,6 +774,12 @@ const AutomationBuilder = () => {
     setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
   }, [setNodes, setEdges]);
 
+  const closeAllContextMenus = useCallback(() => {
+    setNodeContextMenu(null);
+    setEdgeContextMenu(null);
+    setPaneContextMenu(null);
+  }, []);
+
   const copySelected = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected);
     if (selectedNodes.length === 0) return;
@@ -897,8 +914,8 @@ const AutomationBuilder = () => {
       }
       if (e.key === "Escape") {
         e.preventDefault();
-        if (nodeContextMenu !== null) {
-          setNodeContextMenu(null);
+        if (nodeContextMenu !== null || edgeContextMenu !== null || paneContextMenu !== null) {
+          closeAllContextMenus();
         } else if (editingNodeId !== null) {
           setEditingNodeId(null);
         } else if (editingEdgeId !== null) {
@@ -977,11 +994,13 @@ const AutomationBuilder = () => {
     duplicateSelected,
     deselectAll,
     nodeContextMenu,
+    edgeContextMenu,
+    paneContextMenu,
     editingNodeId,
     editingEdgeId,
     nodes,
     edges,
-    setNodeContextMenu,
+    closeAllContextMenus,
     setEditingNodeId,
     setEditingEdgeId,
     setEditingEdgeLabel,
@@ -1030,6 +1049,44 @@ const AutomationBuilder = () => {
       setEditingNodeId(newId);
     },
     [screenToFlowPosition, type, setNodes, nodes, edges, pushStateBefore, markAction]
+  );
+
+  const addDefaultNodeAtPosition = useCallback(
+    (position: { x: number; y: number }) => {
+      pushStateBefore(nodes, edges);
+      markAction();
+      const newId = getUniqueNodeId(nodes);
+      const defaultLabel = "default node";
+      const newNode: Node = {
+        id: newId,
+        type: "default",
+        position,
+        data: { label: defaultLabel },
+      };
+      setNodes((nds) => [...nds, newNode]);
+      setEditingNodeLabel(defaultLabel);
+      setEditingNodeType(getNodeType(newNode));
+      setEditingNodeId(newId);
+    },
+    [nodes, edges, pushStateBefore, markAction, setNodes]
+  );
+
+  const onPaneContextMenu = useCallback(
+    (event: MouseEvent | React.MouseEvent<Element, MouseEvent>) => {
+      event.preventDefault();
+      const menuW = 220;
+      const menuH = 140;
+      const pad = 8;
+      const maxX = window.innerWidth - menuW - pad;
+      const maxY = window.innerHeight - menuH - pad;
+      const x = Math.max(pad, Math.min(event.clientX, maxX));
+      const y = Math.max(pad, Math.min(event.clientY, maxY));
+      const flowPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      setNodeContextMenu(null);
+      setEdgeContextMenu(null);
+      setPaneContextMenu({ x, y, flowX: flowPos.x, flowY: flowPos.y });
+    },
+    [screenToFlowPosition]
   );
 
   const onNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
@@ -1082,12 +1139,12 @@ const AutomationBuilder = () => {
 
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      setNodeContextMenu(null);
+      closeAllContextMenus();
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
       deleteNodeById(node.id);
     },
-    [deleteNodeById]
+    [deleteNodeById, closeAllContextMenus]
   );
 
   const onNodeContextMenu = useCallback(
@@ -1103,24 +1160,47 @@ const AutomationBuilder = () => {
       const y = Math.max(pad, Math.min(event.clientY, maxY));
       setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === node.id })));
       setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
+      setEdgeContextMenu(null);
+      setPaneContextMenu(null);
       setNodeContextMenu({ nodeId: node.id, x, y });
     },
     [setNodes, setEdges]
   );
 
   const onPaneClick = useCallback(() => {
-    setNodeContextMenu(null);
-  }, []);
+    closeAllContextMenus();
+  }, [closeAllContextMenus]);
 
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
+      closeAllContextMenus();
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
       pushStateBefore(nodes, edges);
       markAction();
       setEdges((eds) => eds.filter((e) => e.id !== edge.id));
     },
-    [nodes, edges, pushStateBefore, markAction, setEdges]
+    [nodes, edges, pushStateBefore, markAction, setEdges, closeAllContextMenus]
+  );
+
+  const onEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const menuW = 180;
+      const menuH = 108;
+      const pad = 8;
+      const maxX = window.innerWidth - menuW - pad;
+      const maxY = window.innerHeight - menuH - pad;
+      const x = Math.max(pad, Math.min(event.clientX, maxX));
+      const y = Math.max(pad, Math.min(event.clientY, maxY));
+      setEdges((eds) => eds.map((e) => ({ ...e, selected: e.id === edge.id })));
+      setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+      setNodeContextMenu(null);
+      setPaneContextMenu(null);
+      setEdgeContextMenu({ edgeId: edge.id, x, y });
+    },
+    [setEdges, setNodes]
   );
 
   const onEdgeDoubleClick = useCallback((_: React.MouseEvent, edge: Edge) => {
@@ -1306,11 +1386,13 @@ const AutomationBuilder = () => {
           className="overview"
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onPaneContextMenu={onPaneContextMenu}
           onNodeDoubleClick={onNodeDoubleClick}
           onNodeClick={onNodeClick}
           onNodeContextMenu={onNodeContextMenu}
           onPaneClick={onPaneClick}
           onEdgeClick={onEdgeClick}
+          onEdgeContextMenu={onEdgeContextMenu}
           onEdgeDoubleClick={onEdgeDoubleClick}
           nodeTypes={nodeTypes}
           elementsSelectable
@@ -1469,6 +1551,80 @@ const AutomationBuilder = () => {
             }}
           >
             Delete node
+          </button>
+        </div>
+      )}
+      {edgeContextMenu && (
+        <div
+          className="node-context-menu"
+          style={{ left: edgeContextMenu.x, top: edgeContextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              const edge = edges.find((e) => e.id === edgeContextMenu.edgeId);
+              if (edge) {
+                setEditingEdgeId(edge.id);
+                setEditingEdgeLabel((edge as Edge & { label?: string }).label ?? "");
+              }
+              closeAllContextMenus();
+            }}
+          >
+            Edit edge label
+          </button>
+          <button
+            type="button"
+            className="node-context-menu__item node-context-menu__item--danger"
+            onClick={() => {
+              pushStateBefore(nodes, edges);
+              markAction();
+              setEdges((eds) => eds.filter((e) => e.id !== edgeContextMenu.edgeId));
+              closeAllContextMenus();
+            }}
+          >
+            Delete edge
+          </button>
+        </div>
+      )}
+      {paneContextMenu && (
+        <div
+          className="node-context-menu"
+          style={{ left: paneContextMenu.x, top: paneContextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              addDefaultNodeAtPosition({ x: paneContextMenu.flowX, y: paneContextMenu.flowY });
+              closeAllContextMenus();
+            }}
+          >
+            Add default node
+          </button>
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              pasteFromClipboard();
+              closeAllContextMenus();
+            }}
+          >
+            Paste nodes
+          </button>
+          <button
+            type="button"
+            className="node-context-menu__item"
+            onClick={() => {
+              fitView({ padding: getDefaultFitPadding(), duration: 300 });
+              closeAllContextMenus();
+            }}
+          >
+            Fit view
           </button>
         </div>
       )}
